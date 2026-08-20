@@ -1,39 +1,39 @@
 # ENVIRONMENT AND DEPLOYMENT
 
-## Environments
+# 1. ENVIRONMENTS — P1
 
 Maintain separate development, staging and production configuration where practical.
 
-## Environment variables
+# 2. ENVIRONMENT VARIABLES — P0
 
-Secrets and environment-specific values must be injected by the deployment platform. `.env` files are for local development only and must be ignored by Git when they contain secrets.
+Inject environment-specific values through deployment configuration. Local `.env` files containing secrets must be ignored by Git.
 
-Typical categories include:
+Typical categories: Supabase URL/public key, server service-role key, payment credentials, webhook secrets, exchange-rate credentials, email credentials, application URL and private payout integration configuration.
 
-- Supabase URL;
-- public Supabase anon/publishable key;
-- server-side Supabase service-role key;
-- payment-provider credentials;
-- webhook signing secrets;
-- exchange-rate provider credentials;
-- email provider credentials;
-- application URL;
-- private payout integration configuration.
+Only browser-safe values may enter client bundles.
 
-Only browser-safe values may be exposed to client bundles.
+# 3. DATABASE DEPLOYMENT — P0
 
-## Database deployment
+Apply migrations in order. Back up production before risky migrations. Never make irreversible schema changes without migration/recovery planning.
 
-Apply migrations in order. Back up production before risky migrations. Never make an irreversible production schema change without a migration and rollback/recovery plan.
+# 4. PRODUCTION DEPLOYMENT — P0
 
-## Deployment
+Fail builds when required non-secret configuration is missing. Never print secrets in logs.
 
-Production builds must fail if required non-secret configuration is missing. Secret values must not be printed in logs.
+# 5. HOSTING — P1
 
-## Vercel/hosting principle
+If Vercel or another frontend host is used, configure secrets in project environment settings. Server functions receive only required secrets.
 
-If Vercel or another frontend host is used, environment variables must be configured in its project settings rather than committing secrets to the repository. Server-side functions must receive only the secrets they actually require.
+# 6. MONITORING — P1
 
-## Monitoring
+Monitor authentication failures, payment/webhook failures, settlement failures, withdrawal failures and unexpected database errors.
 
-Monitor authentication errors, payment/webhook failures, settlement failures, withdrawal failures and unexpected database errors.
+# 7. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+Never commit secrets or use production credentials in source code.
+
+## P1
+
+Deployment must be reproducible from repository code plus environment configuration.
