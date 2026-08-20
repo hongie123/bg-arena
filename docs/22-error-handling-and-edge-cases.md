@@ -1,43 +1,51 @@
 # ERROR HANDLING AND EDGE CASES
 
-## General
+# 1. GENERAL — P0
 
-Errors must leave the system in a valid state. Prefer explicit pending states over guessing.
+Errors must leave the system valid. Prefer explicit pending states over guessing.
 
-## Payments
+# 2. PAYMENTS — P0
 
-Handle duplicate webhooks, delayed confirmations, provider timeouts, expired invoices, underpayment, overpayment, rate-service failure, provider reversal and conflicting status events.
+Handle duplicate webhooks, delayed confirmation, provider timeouts, expired invoices, under/overpayment, rate-service failure, reversal and conflicting status events. Never credit twice; timeout does not automatically mean failure.
 
-Never credit twice. Never assume timeout means failure.
+# 3. WALLET — P0
 
-## Wallet
+Prevent negative balances and double spending. Concurrent withdrawals/entries require transactional locking or equivalent concurrency protection.
 
-Prevent negative balances and double spending. Concurrent withdrawals/entries must use transactional locking or equivalent concurrency control.
+# 4. REGISTRATION — P0
 
-## Registration
+Handle full competitions, closing race conditions, duplicate registration and wallet debit failure atomically.
 
-Handle full competition, closing race conditions, duplicate registration and wallet debit failure atomically.
+# 5. SETTLEMENT — P0
 
-## Settlement
+Reject malformed/ambiguous results. Prevent double settlement. Retries must safely resume or return existing outcome.
 
-Reject malformed/ambiguous results. Prevent double settlement. If settlement processing crashes, the retry must safely resume or return the existing outcome.
+# 6. WITHDRAWAL — P0
 
-## Withdrawal
+Handle insufficient funds, duplicate requests, invalid destinations, pending/failed/ambiguous payout and admin rejection. Never release funds solely because a provider request timed out.
 
-Handle insufficient funds, duplicate requests, invalid destination, payout pending, payout failed, payout ambiguous and administrator rejection. Never release funds simply because an external request timed out.
+# 7. ACCOUNT — P1
 
-## Account
+Suspended accounts are blocked from restricted actions while financial history remains intact.
 
-Suspended accounts should be blocked from restricted actions while preserving historical financial records.
+# 8. ADMIN — P0
 
-## Admin
+Admin actions fail closed when authorization cannot be verified.
 
-Admin actions must fail closed when authorization cannot be verified.
+# 9. EXTERNAL SERVICES — P0
 
-## External services
+Use timeouts, controlled retries and idempotency. Never blindly retry a non-idempotent financial mutation.
 
-Use timeouts, controlled retries and idempotency. Never retry a financial mutation blindly unless the operation is designed to be idempotent.
+# 10. DATA CORRECTION — P0
 
-## Data correction
+Never delete historical financial records. Use compensating entries and audit logs.
 
-Do not delete historical financial records. Use compensating entries and audit logs.
+# 11. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+Every external dependency must have explicit failure/ambiguous states.
+
+## P1
+
+User-facing errors should be safe, actionable and free of secrets/internal stack traces.
