@@ -1,107 +1,124 @@
 # BG ARENA — CLAUDE CODEBASE INSTRUCTIONS
 
-## 1. Purpose
+# 1. PURPOSE — P0
 
-This repository contains the authoritative product, architecture, security, database, financial, API, UI, and implementation specification for BG Arena.
+This repository is the authoritative implementation specification for BG Arena. Any AI coding agent working here MUST treat the Markdown documentation as an engineering contract, not as general product notes.
 
-Claude and any other coding agent working in this repository MUST read this file first and then read the relevant documents in `docs/` before changing code or architecture.
+# 2. REQUIRED READING ORDER — P0
 
-The goal is to build a production-ready, game-agnostic competitive gaming platform. The documentation is not a loose product description: it is the implementation contract.
+Before creating or modifying application code, read:
 
-## 2. Source of truth
+1. `CLAUDE.md` — global engineering rules.
+2. `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md` — AI operating manual and priority system.
+3. `docs/01-master-platform-specification.md` — product source of truth.
+4. The specialized domain document relevant to the requested feature.
+5. Existing code, migrations and tests affected by the change.
 
-Priority order:
+# 3. PRIORITY MARKERS — P0
 
-1. Explicit user decisions recorded in the repository documentation.
-2. `docs/01-master-platform-specification.md`.
-3. The other specialized documents under `docs/`.
-4. Existing application code, only where it does not contradict the specification.
-5. Reasonable engineering judgment for implementation details not explicitly decided.
+Markdown heading levels communicate scope and priority:
 
-Never silently replace an explicit product decision with a more convenient implementation.
+- `#` = document/domain authority.
+- `##` = major implementation area.
+- `###` = required subsystem/rule.
+- `P0` = non-negotiable invariant/security/financial requirement.
+- `P1` = required product behavior.
+- `P2` = preferred engineering implementation.
+- `P3` = optional/future behavior.
 
-If two documents conflict, stop and identify the conflict instead of inventing a resolution. The master specification and explicit user decisions take precedence.
+If a P0 rule conflicts with convenience, convenience loses.
 
-## 3. Non-negotiable architecture
+# 4. SOURCE-OF-TRUTH HIERARCHY — P0
 
-- BG Arena is game-agnostic at the core.
-- Do not hard-code PUBG, CODM, Free Fire, or another game into core user, wallet, competition, registration, or navigation models.
-- Game-specific fields belong to competition configuration and registration data.
-- Supabase is the planned primary backend/database platform.
-- Internal monetary accounting is USD-only.
-- Local currencies and cryptocurrencies are deposit currencies, not internal wallet currencies.
-- Every deposit must preserve the original currency/asset, original amount, exchange rate used, USD amount credited, provider reference, and lifecycle status.
-- Exchange-rate retrieval must happen at deposit processing time through the configured rate source.
-- Cameroon launch payment methods include MTN Mobile Money and Orange Money.
-- Crypto deposits are supported through the selected crypto payment provider integration.
-- The platform must clearly distinguish Cameroon-only mobile-money methods from international methods.
-- Authentication is email-based. A phone number may be collected as profile/contact information but is not the authentication factor.
-- BG Arena does not directly execute player payouts.
-- Withdrawals are validated and funds are reserved in BG Arena, after which an authorized administrator receives a payout instruction for the separate private payout application.
-- Payout-provider secret credentials must never be stored in the public BG Arena application.
-- Financial operations must be auditable and idempotent.
-- Balance changes must be ledger-backed; never mutate a balance without a corresponding auditable transaction.
-- Admin actions affecting money, settlement, competition status, or user access require explicit authorization and audit logging.
+1. Explicit user decisions.
+2. This file.
+3. `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md`.
+4. `docs/01-master-platform-specification.md`.
+5. Specialized documents.
+6. Existing code.
+7. Engineering judgment.
 
-## 4. Financial safety rules
+When a conflict affects money, identity, authorization, database integrity, or payout security, STOP and report the conflict instead of guessing.
 
-Treat financial code as protected code.
+# 5. NON-NEGOTIABLE ARCHITECTURE — P0
+
+- BG Arena is game-agnostic.
+- Supabase/PostgreSQL is the planned primary backend.
+- Internal accounting is USD-only.
+- Deposits may originate in XAF, other configured fiat currencies, or crypto, but the wallet is USD.
+- Original deposit amount, currency/asset, conversion rate, rate source, timestamps and provider references are preserved.
+- Cameroon launch payment methods are MTN Mobile Money and Orange Money, explicitly identified as Cameroon-only.
+- Crypto is provider-adapter based.
+- Authentication is email based.
+- Phone numbers are contact/profile/payment information only.
+- BG Arena does not execute payout-provider calls.
+- Payout-provider credentials belong only to the private payout application.
+- Financial mutations are ledger-backed and idempotent.
+- Admin financial operations require authorization and audit logging.
+
+# 6. FORBIDDEN IMPLEMENTATIONS — P0
 
 Never:
 
-- use floating-point arithmetic for money;
-- silently round monetary values;
-- credit a wallet twice for one provider event;
-- settle a competition twice;
-- release reserved withdrawal funds without an explicit state transition;
-- allow a client to choose its own credited USD amount;
+- trust client-supplied wallet balances;
+- trust client-supplied USD credit amounts;
 - trust client-supplied exchange rates;
-- expose provider secrets to browser/client code;
-- execute payout-provider calls from the public client;
-- delete financial history to correct an error.
+- expose Supabase service-role keys in the browser;
+- expose payment/webhook/payout secrets;
+- use floating-point arithmetic as authoritative money;
+- credit the same provider event twice;
+- settle the same competition twice;
+- silently edit/delete historical financial records;
+- add PUBG/CODM/Free Fire-specific permanent profile columns;
+- execute payout APIs from BG Arena;
+- invent undocumented provider endpoints or credentials.
 
-Use integer minor units or an exact decimal strategy consistently. Every financial mutation must have an immutable audit trail and idempotency protection.
+# 7. IMPLEMENTATION WORKFLOW — P1
 
-## 5. Security
+For every feature:
 
-Use Supabase Auth for email authentication and enforce authorization through server-side checks and database Row Level Security where appropriate.
+1. Identify specification documents.
+2. Read dependencies.
+3. Inspect current implementation.
+4. Define data model and state transitions.
+5. Define authorization and RLS requirements.
+6. Define validation and failure behavior.
+7. Implement backend/domain behavior.
+8. Implement UI.
+9. Add tests.
+10. Review security and financial implications.
+11. Update documentation if the contract changed.
 
-Never expose service-role credentials in frontend code. Never commit `.env` files or secrets. Public environment variables must contain only values safe for the browser.
+# 8. FINANCIAL SAFETY — P0
 
-Admin privileges must be role-based and verified server-side. The UI is not a security boundary.
+Every money-changing operation must have an explicit reference/idempotency key, authorization, validation, transaction boundary, ledger impact and audit trail.
 
-## 6. Implementation behavior
+Use integer minor units or exact decimal arithmetic. Preserve the rate used at deposit processing time. Never recalculate historical credits using a later rate.
 
-Before implementing a feature:
+# 9. SETTLEMENT SAFETY — P0
 
-1. Identify the relevant specification document.
-2. Read its requirements and dependencies.
-3. Inspect the current codebase.
-4. Implement the smallest coherent production-ready change.
-5. Preserve existing contracts unless the specification explicitly changes them.
-6. Add validation and error handling.
-7. Add or update tests.
-8. Check security and financial implications.
-9. Update documentation when the implementation changes an established contract.
+AI-extracted results are untrusted input. Validate JSON/schema, competition identity, registration identity, duplicate participants, numeric ranges, game-specific rules and calculated amounts. AI must never directly credit a wallet.
 
-Do not create placeholder implementations that look complete. If an external provider cannot be safely implemented without credentials or confirmed API details, implement a clean provider boundary and explicit configuration/error path rather than inventing API behavior.
+Settlement requires administrator preview and explicit confirmation before financial mutation.
 
-## 7. UI principles
+# 10. WITHDRAWAL SAFETY — P0
 
-The player experience should be simple, responsive, lightweight, and suitable for the initial Cameroon market. Do not introduce unnecessary complexity.
+Withdrawal funds are reserved before pending payout processing. Ambiguous external payout outcomes must remain reserved until reconciled. BG Arena exports payout instructions; it does not execute the payout provider.
 
-Player navigation is centered around:
+# 11. UI REQUIREMENTS — P1
+
+Player navigation:
 
 - Dashboard
-- Games / Tournaments
+- Games/Tournaments
 - Wallet
 - Results & History
 - Notifications
 - Tutorials
 - Support
-- Account / Settings
+- Account/Settings
 
-Admin navigation includes:
+Admin navigation:
 
 - Overview
 - Users
@@ -109,96 +126,36 @@ Admin navigation includes:
 - Registrations
 - Settlements
 - Payments
-- Wallet / Transactions
+- Wallet/Transactions
 - Withdrawals
 - Financial Reconciliation
 - Notifications
 - Support
 
-Player profile presentation should not require stored avatar images. The default profile representation is the user's capitalized first initial with an assigned background color.
+All asynchronous views need loading, empty, success and error states. Money displays must clearly identify USD.
 
-## 8. Competition principle
+# 12. DEVELOPMENT ORDER — P1
 
-A competition defines its own game, rules, registration requirements, entry fee, capacity, schedule, prize structure, and settlement configuration.
+Build in dependency order:
 
-Permanent player profiles must not contain game-specific competitive identifiers that only apply to one game. Game-specific identifiers are collected when registering for the relevant competition.
+1. foundation/configuration;
+2. Supabase schema/migrations;
+3. authentication/RLS;
+4. profiles/roles;
+5. wallet/ledger;
+6. deposits/provider adapters;
+7. exchange-rate processing;
+8. competitions/registrations;
+9. player dashboard;
+10. admin dashboard;
+11. result extraction/settlement;
+12. withdrawals/payout export;
+13. reconciliation;
+14. notifications/support;
+15. tests/security/observability/deployment.
 
-## 9. Settlement principle
+# 13. DEFINITION OF DONE — P0
 
-Settlement follows a controlled workflow:
+A feature is complete only when its UI, database schema, business rules, authorization, RLS, validation, error handling, persistence, auditability, idempotency, tests and documentation agree.
 
-match/result evidence -> result extraction -> structured result data -> admin import/review -> validation -> settlement calculation -> explicit admin confirmation -> atomic ledger transactions -> final settlement.
-
-Where AI is used for result extraction, AI output is untrusted input. BG Arena must validate syntax, schema, competition identity, player identity, numeric values, duplicates, and business rules before money is affected.
-
-## 10. Development order
-
-Build in dependency order, not by visual convenience:
-
-1. repository/project foundation;
-2. environment configuration;
-3. Supabase schema and migrations;
-4. authentication and authorization;
-5. core user/profile system;
-6. wallet and immutable ledger;
-7. deposits and payment-provider boundaries;
-8. currency/exchange-rate processing;
-9. competitions and registrations;
-10. player dashboard;
-11. admin dashboard;
-12. settlement and result processing;
-13. withdrawals and payout export;
-14. reconciliation;
-15. notifications/support;
-16. testing, security hardening, observability and deployment.
-
-## 11. Required reading
-
-Read these documents as needed, but the following are the principal implementation contracts:
-
-- `docs/01-master-platform-specification.md`
-- `docs/02-product-requirements.md`
-- `docs/03-system-architecture.md`
-- `docs/04-supabase-database-schema.md`
-- `docs/05-authentication-and-user-management.md`
-- `docs/06-player-dashboard.md`
-- `docs/07-admin-dashboard.md`
-- `docs/08-games-competitions-and-tournaments.md`
-- `docs/09-registration-system.md`
-- `docs/10-wallet-and-ledger.md`
-- `docs/11-payments-and-deposits.md`
-- `docs/12-currency-and-exchange-rates.md`
-- `docs/13-withdrawals-and-payouts.md`
-- `docs/14-settlement-engine.md`
-- `docs/15-result-extraction-and-ai.md`
-- `docs/16-notifications.md`
-- `docs/17-support-system.md`
-- `docs/18-security-and-permissions.md`
-- `docs/19-api-and-integration-contracts.md`
-- `docs/20-environment-and-deployment.md`
-- `docs/21-testing-and-quality-assurance.md`
-- `docs/22-error-handling-and-edge-cases.md`
-- `docs/23-development-roadmap.md`
-
-## 12. Forbidden assumptions
-
-Do not invent:
-
-- payment-provider credentials;
-- production API endpoints;
-- fee schedules;
-- exchange-rate providers when not configured;
-- legal claims or regulatory status;
-- payout execution capabilities inside BG Arena;
-- game-specific permanent profile fields;
-- hidden fees;
-- automatic administrative actions that were specified as manual;
-- financial values supplied by the client.
-
-When something is intentionally manual, keep it manual unless the user explicitly changes the requirement.
-
-## 13. Definition of done
-
-A feature is not complete merely because its UI renders. It is complete when its data model, authorization, validation, business logic, error handling, auditability, tests, loading/empty/error states, and documentation are coherent with this specification.
-
-For financial functionality, completion additionally requires idempotency, immutable transaction history, authorization, reconciliation behavior, and explicit state transitions.
+A screen that only looks correct is not a completed feature.
