@@ -1,49 +1,47 @@
 # SETTLEMENT ENGINE
 
-## Purpose
+# 1. PURPOSE — P0
 
 Convert validated competition results into deterministic financial outcomes.
 
-## Workflow
+# 2. WORKFLOW — P0
 
-1. identify competition;
-2. import result data;
-3. validate schema;
-4. resolve registrations/players;
-5. validate game-specific metrics;
-6. run settlement rules;
-7. produce preview;
-8. admin reviews preview;
-9. admin explicitly confirms;
-10. execute atomic settlement;
-11. create winning ledger credits;
-12. mark settlement complete;
-13. notify affected players.
+`identify competition -> import result -> validate schema -> resolve registrations -> validate metrics -> calculate -> preview -> admin confirmation -> atomic settlement -> winnings credits -> complete -> notify`
 
-## Settlement input
+# 3. INPUT — P1
 
-Input should identify competition, result source, participants and game-specific metrics. Example fields may include rank, kills, finishes, score, team, outcome or other metrics depending on the competition.
+Inputs identify competition, source, participants and game-specific metrics such as rank, kills, finishes, score, team or outcome according to competition configuration.
 
-## Validation
+# 4. VALIDATION — P0
 
-Reject unknown competition IDs, nonexistent registrations, duplicate participants, invalid numeric values, impossible ranks, unauthorized result changes and settlement totals exceeding configured limits.
+Reject unknown competitions, nonexistent registrations, duplicate participants, invalid numeric values, impossible ranks, unauthorized result changes and totals exceeding configured limits.
 
-## Determinism
+# 5. DETERMINISM — P0
 
-The same validated settlement input and configuration must produce the same financial output. Preserve a snapshot of the configuration and calculation used.
+The same validated input/configuration must produce the same financial output. Persist calculation/configuration snapshots.
 
-## PUBG-style result rules
+# 6. GAME-SPECIFIC RULES — P0
 
-Where a competition uses PUBG-specific rules, those rules belong to its settlement adapter/configuration. Examples may include distinguishing knockdowns from confirmed finishes, handling environmental deaths, revives and final credited kills. These rules must not become assumptions for other games.
+PUBG-style concepts such as knocks, finishes, environmental deaths and revives belong to a PUBG-specific adapter/configuration. They must never become generic assumptions.
 
-## Atomicity
+# 7. ATOMICITY — P0
 
-Settlement confirmation must prevent partial completion. If one winner credit fails, the settlement must not leave a subset credited while the settlement is marked complete.
+Settlement cannot partially credit winners while marking the run complete. Use a transactional boundary.
 
-## Duplicate protection
+# 8. DUPLICATE PROTECTION — P0
 
-A completed settlement for a competition cannot be executed again. Retry requests must return the existing settlement outcome.
+A completed settlement cannot execute again. Retry returns the existing outcome.
 
-## Corrections
+# 9. CORRECTIONS — P0
 
-A confirmed settlement must not be silently edited. Corrections require a controlled reversal/adjustment process, reason, authorization and audit trail.
+Confirmed settlement is not silently edited. Corrections use controlled reversal/adjustment, authorization, reason and audit.
+
+# 10. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+AI extraction output is untrusted. Only validated settlement code can create wallet transactions.
+
+## P1
+
+Persist imported input, validated output and calculation preview so administrators can audit exactly what was settled.
