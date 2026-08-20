@@ -1,33 +1,33 @@
 # REGISTRATION SYSTEM
 
-## Flow
+# 1. REGISTRATION FLOW — P0
 
-1. Authenticate player.
-2. Load competition.
-3. Verify competition is accepting registrations.
-4. Verify account eligibility.
-5. Load required dynamic fields.
-6. Validate submitted field values.
-7. Check capacity and duplicate-entry policy.
-8. Determine entry fee.
-9. Collect/debit entry fee using the wallet/payment workflow.
-10. Create registration and associate the financial transaction atomically where possible.
-11. Notify player.
+`authenticate -> load competition -> verify accepting registrations -> verify account -> load dynamic fields -> validate -> check capacity/duplicates -> determine fee -> debit/collect -> create registration -> notify`
 
-## Dynamic fields
+The registration and entry-fee relationship must be atomic/coherent.
 
-Each competition can define fields such as in-game username, player ID, team, region or other game-specific data. Field definitions contain type, label, required flag, order and validation configuration.
+# 2. DYNAMIC FIELDS — P1
 
-## Payment behavior
+Competition-defined fields may include in-game username, player ID, team, region or other game-specific data. Definitions contain type, label, required flag, order and validation configuration.
 
-If the entry fee is paid from wallet funds, the wallet debit and successful registration must be consistent. A failed debit must not produce a paid registration.
+# 3. PAYMENT — P0
 
-If an external deposit is needed first, registration remains unpaid/pending until the required USD balance is actually credited.
+A failed wallet debit must not create a paid registration. If a deposit is needed first, registration remains unpaid/pending until the USD balance is actually credited.
 
-## Cancellation/refund
+# 4. CANCELLATION/REFUND — P0
 
-If an admin cancels a competition, the platform follows the configured refund policy. Refunds are compensating wallet credits with references to the original entry transaction and cancellation reason.
+Competition cancellation follows configured refund policy. Refunds are compensating USD ledger credits referencing the original entry transaction and reason.
 
-## Multiple entries
+# 5. MULTIPLE ENTRIES — P1
 
-Default behavior is one registration per player per competition. If a future format allows multiple entries, the competition must explicitly enable it and define how each entry is distinguished.
+Default is one registration per player per competition. Multiple entries require explicit competition configuration and unique entry identity.
+
+# 6. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+Never trust client-submitted competition price, eligibility or registration status. Recalculate/validate on the server.
+
+## P1
+
+Validate dynamic fields against server-stored definitions and test capacity/duplicate race conditions.
