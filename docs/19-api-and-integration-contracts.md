@@ -1,45 +1,39 @@
 # API AND INTEGRATION CONTRACTS
 
-## General API rules
+# 1. GENERAL API RULES — P0
 
-APIs must use authenticated sessions where required, validate input, return predictable error structures, and avoid exposing internal secrets or unnecessary database columns.
+Authenticated operations validate input and authorization, return predictable errors and expose only necessary data.
 
-Use stable resource identifiers and explicit status values.
+# 2. DOMAIN ENDPOINTS — P1
 
-## Domain endpoints
+Contracts may cover profile/account, competitions, registration, wallet/transactions, deposits, exchange rates, withdrawals, notifications, support, admin operations and settlement.
 
-The implementation may expose endpoints/actions for:
+# 3. PAYMENT PROVIDER ADAPTER — P0
 
-- profile/account;
-- competitions;
-- registration;
-- wallet/transactions;
-- deposits;
-- exchange-rate processing;
-- withdrawals;
-- notifications;
-- support;
-- admin operations;
-- settlement.
+Normalize operations such as create payment, query status and validate webhook/event. Provider-specific payloads remain inside adapters.
 
-Exact framework-specific routing is an implementation choice unless otherwise specified by the application codebase.
+# 4. EXCHANGE-RATE ADAPTER — P0
 
-## Payment-provider adapter
+Return source asset, USD rate, source/provider, timestamp and validity metadata.
 
-Each provider adapter should expose normalized operations such as create payment, query payment status and validate webhook/event. Provider-specific payloads remain inside the adapter.
+# 5. PAYOUT BOUNDARY — P0
 
-## Exchange-rate adapter
+BG Arena exports normalized payout instructions. It does not call payout providers.
 
-Expose a normalized operation returning source asset, USD rate, source/provider, timestamp and validity metadata.
+# 6. ERROR CONTRACT — P1
 
-## Payout boundary
+Distinguish validation, authentication, authorization, not-found, conflict/idempotency, provider-pending, provider-failure and internal errors. Never expose stack traces/secrets.
 
-BG Arena exports a normalized payout instruction rather than calling payout providers. The private payout app handles provider-specific execution.
+# 7. WEBHOOKS — P0
 
-## Error contract
+Handlers must authenticate, be retry-safe/idempotent and persist enough information for reliable processing.
 
-Errors should distinguish validation, authentication, authorization, not-found, conflict/idempotency, provider-pending, provider-failure and internal errors. Never expose stack traces or secrets to users.
+# 8. AI IMPLEMENTATION DIRECTIVES
 
-## Webhooks
+## P0
 
-Webhook handlers must be fast, authenticated, idempotent and resilient to retries. If processing is asynchronous, acknowledge only according to the provider's delivery semantics and persist enough information to process safely.
+Do not leak provider payloads or secrets into unrelated domains. Never invent production endpoints.
+
+## P1
+
+Use typed request/response schemas and explicit error codes.
