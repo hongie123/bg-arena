@@ -1,21 +1,31 @@
 # SUPPORT SYSTEM
 
-## Player support
+# 1. PLAYER SUPPORT — P1
 
 Players can create tickets with subject, category, priority and description. Messages remain associated with the ticket.
 
-## Admin support
+# 2. ADMIN SUPPORT — P1
 
-Admins can view, assign, respond to, and close tickets. All messages are timestamped and attributable.
+Admins can view, assign, respond to and close tickets. Messages are timestamped and attributable.
 
-## Statuses
+# 3. STATUSES — P1
 
-Suggested statuses: OPEN, IN_PROGRESS, WAITING_FOR_PLAYER, RESOLVED, CLOSED.
+`OPEN`, `IN_PROGRESS`, `WAITING_FOR_PLAYER`, `RESOLVED`, `CLOSED`.
 
-## Financial support cases
+# 4. FINANCIAL CASES — P0
 
-Payment/withdrawal complaints must reference the relevant internal transaction/deposit/withdrawal ID where possible. Support staff must not directly edit financial records; they escalate controlled financial corrections to authorized workflows.
+Payment/withdrawal complaints reference internal transaction/deposit/withdrawal IDs. Support staff never directly edit financial records; controlled financial workflows perform corrections.
 
-## Privacy
+# 5. PRIVACY — P0
 
-A support agent should see only the information needed to resolve the ticket. Sensitive payment credentials and provider secrets must never appear in tickets.
+Agents see only necessary information. Sensitive credentials and provider secrets never appear in tickets.
+
+# 6. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+Support is not a backdoor administrative mechanism. Ticket messages cannot authorize financial changes.
+
+## P1
+
+Provide clear escalation paths for financial disputes and preserve ticket history.
