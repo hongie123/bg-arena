@@ -1,102 +1,65 @@
 # BG ARENA — SYSTEM ARCHITECTURE
 
-## 1. Architectural layers
+# 1. ARCHITECTURAL LAYERS — P0
 
-BG Arena should be separated into:
+BG Arena is separated into presentation/client, authenticated API/application, domain/business services, persistence/database, external provider adapters, asynchronous/event processing and administration tooling. The client is never a trusted business layer.
 
-1. presentation/client;
-2. authenticated application/API layer;
-3. domain/business services;
-4. persistence/database;
-5. external provider adapters;
-6. asynchronous/event processing where required;
-7. administration tooling.
+# 2. DOMAIN BOUNDARIES — P0
 
-The client must not be treated as a trusted business layer.
+Primary domains: identity/profiles, competitions, registrations, wallet/ledger, payments/deposits, exchange rates, withdrawals, settlement, notifications, support, administration and audit.
 
-## 2. Domain boundaries
+Each domain exposes explicit operations rather than unrelated UI components directly mutating financial records.
 
-Primary domains:
+# 3. REQUEST FLOW — P0
 
-- identity and profiles;
-- competitions;
-- registrations;
-- wallet/ledger;
-- payments/deposits;
-- exchange rates;
-- withdrawals;
-- settlement;
-- notifications;
-- support;
-- administration;
-- audit.
+Authenticated request:
 
-Each domain should expose explicit service boundaries instead of allowing unrelated UI components to mutate database records directly.
+`client -> authentication -> server authorization -> validation -> domain operation -> database -> response`
 
-## 3. Request flow
+Payment event:
 
-Typical authenticated request:
+`provider -> verified event endpoint -> validation -> idempotency -> payment state -> rate processing -> ledger credit -> notification`
 
-client -> authentication -> server-side authorization -> domain validation -> transaction/business operation -> database -> response.
+# 4. TRANSACTION BOUNDARIES — P0
 
-External payment flow:
+Money-changing operations must be atomic. Wallet credit, entry-fee debit, withdrawal reservation and settlement must never leave partially completed financial state.
 
-provider -> verified webhook/controlled event endpoint -> event validation -> idempotency -> payment record -> exchange-rate processing -> ledger transaction -> notification.
+Use PostgreSQL transactions/functions or secure Supabase server-side mechanisms appropriate to the operation.
 
-## 4. Transaction boundary
+# 5. EVENT/IDEMPOTENCY ARCHITECTURE — P0
 
-Money-changing operations must be atomic. A wallet credit must not succeed while its corresponding transaction record fails, and an entry-fee debit must not succeed without the associated registration/payment state being coherent.
+Every provider event capable of financial mutation requires a durable unique event/provider reference. Retries must return the existing outcome without creating another financial mutation.
 
-Use PostgreSQL transactions/functions or a secure server-side transaction mechanism appropriate to Supabase.
+# 6. PUBLIC/PRIVATE SERVICE SEPARATION — P0
 
-## 5. Event/idempotency architecture
+BG Arena is the public application. The private payout application owns payout-provider secrets and external payout execution. BG Arena produces normalized payout instructions and records outcomes.
 
-Every provider event that can cause financial mutation must have a durable unique external event/provider reference.
+# 7. GAME ADAPTER ARCHITECTURE — P0
 
-Repeated delivery must return the existing result and must never create a second credit/debit.
+Game-specific registration fields, result fields, validation and settlement rules belong to configurable game/competition adapters. Core wallet/user services consume normalized outputs.
 
-## 6. Separation of public and private services
+# 8. DATABASE ACCESS — P0
 
-The public BG Arena application handles user-facing platform operations.
+RLS controls user-facing access. Privileged operations are server-side. The Supabase service-role key is never shipped to the browser.
 
-The private payout application is outside this repository's trusted public runtime and stores payout-provider secrets. BG Arena communicates with it through manually transferred or otherwise explicitly authorized payout instructions as defined by the payout specification.
+# 9. OBSERVABILITY — P1
 
-## 7. Game adapter architecture
+Log payment events, ledger operations, settlement attempts, withdrawal transitions, authorization failures, provider failures and webhook verification failures without secrets or unnecessary sensitive data.
 
-The generic platform should represent a competition and its registration/settlement configuration without knowing game-specific fields.
+# 10. FAILURE PHILOSOPHY — P0
 
-Game adapters/configurations may define:
+External dependencies require explicit pending, failed, retryable and ambiguous states. A timeout must not be interpreted as a financial failure unless provider reconciliation establishes that result.
 
-- registration fields;
-- result fields;
-- validation rules;
-- settlement rules;
-- scoring calculations.
+# 11. AI IMPLEMENTATION DIRECTIVES
 
-The core wallet and user domains consume only normalized settlement outputs.
+## P0
 
-## 8. Database access
+Preserve domain boundaries. Never move financial authority into React/components/browser code.
 
-Frontend code should access only data allowed by RLS and application contracts. Privileged operations should run server-side.
+## P1
 
-Never ship the Supabase service-role key to the browser.
+Implement provider adapters, service boundaries and transaction operations before building complex UI workflows.
 
-## 9. Observability
+## P2
 
-Production implementation should provide structured logging around:
-
-- payment events;
-- wallet transactions;
-- settlement attempts;
-- withdrawal state transitions;
-- authorization failures;
-- provider errors;
-- webhook verification failures.
-
-Logs must not contain secrets or unnecessary sensitive data.
-
-## 10. Failure philosophy
-
-External providers are unreliable dependencies. The platform must use explicit pending/failed/retryable states rather than assuming every network call succeeds.
-
-A provider timeout must not automatically mean that a payment failed. Reconciliation and provider confirmation must determine final state.
+Prefer typed domain contracts and small testable services. Keep external payload translation inside adapters.
