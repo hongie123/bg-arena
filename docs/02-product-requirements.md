@@ -1,154 +1,69 @@
 # BG ARENA — PRODUCT REQUIREMENTS
 
-## 1. Users and roles
+# 1. USERS AND ROLES — P1
 
-### Player
-A player can create an account, authenticate by email, maintain a profile, browse competitions, register, pay entry fees, participate, view results, receive winnings, deposit funds, request withdrawals, receive notifications, and contact support.
+## Player
 
-### Admin
-An authorized administrator manages users, competitions, registrations, payments, settlements, withdrawals, reconciliation, notifications, and support.
+A player can create an account, authenticate by email, maintain a profile, browse competitions, register, pay entry fees, participate, view results, receive winnings, deposit funds, request withdrawals, receive notifications, use tutorials and contact support.
 
-### System/service roles
-Server-side services process authenticated provider events, exchange-rate lookups, settlement operations, notifications, and other controlled automation.
+## Admin
 
-## 2. Account requirements
+An authorized administrator manages users, competitions, registrations, payments, settlements, withdrawals, reconciliation, notifications and support.
 
-Required account concepts:
+## System/service roles
 
-- unique user ID;
-- email;
-- display/name information;
-- phone number as profile/contact data when collected;
-- account status;
-- role;
-- created/updated timestamps;
-- last authentication information where appropriate.
+Server-side services process authenticated provider events, exchange-rate lookups, settlement operations, notifications and other controlled automation.
 
-Phone number must never become the authentication mechanism unless the product specification is explicitly changed.
+# 2. ACCOUNT REQUIREMENTS — P0
 
-## 3. Player requirements
+Required concepts include unique user ID, email, display/name information, optional phone contact data, account status, protected role and timestamps. Phone number must never become an authentication factor without an explicit product change.
 
-The player must be able to:
+# 3. PLAYER REQUIREMENTS — P1
 
-1. register with email;
-2. sign in/out;
-3. recover access through the configured email-authentication flow;
-4. complete profile information;
-5. browse available competitions;
-6. inspect competition rules, schedule, entry fee, capacity and prize structure;
-7. register for eligible competitions;
-8. provide competition-specific registration data;
-9. pay an entry fee from available wallet funds or through the defined deposit flow;
-10. view wallet balance and transaction history;
-11. deposit using available payment methods;
-12. see deposited source currency/amount and resulting USD credit in history;
-13. view competition results;
-14. view winnings;
-15. request withdrawals;
-16. see withdrawal status;
-17. receive notifications;
-18. use tutorials and support;
-19. manage account settings.
+The player must be able to register/sign in/out, recover access by email, manage profile, browse competitions, inspect rules/schedule/fees/capacity/prizes, register with dynamic game-specific fields, pay entry fees, view USD wallet/transactions, deposit, see source-currency conversion information, view results/winnings, request withdrawals, see withdrawal status, receive notifications, use tutorials/support and manage settings.
 
-## 4. Competition requirements
+# 4. COMPETITION REQUIREMENTS — P1
 
-Administrators must be able to create competitions with configurable:
+Admins can configure game, title, description, format, rules, registration window, schedule, participant limit, USD entry fee, USD prize structure, status, dynamic registration fields and settlement configuration.
 
-- game;
-- title;
-- description;
-- banner/visual references if later implemented;
-- format;
-- rules;
-- registration window;
-- event schedule;
-- participant limit;
-- entry fee USD;
-- prize structure USD;
-- status;
-- registration fields;
-- settlement configuration.
+Status transitions must be explicit and validated:
 
-Competition statuses should be explicit and validated, for example:
+`DRAFT -> PUBLISHED -> REGISTRATION_OPEN -> REGISTRATION_CLOSED -> IN_PROGRESS -> RESULT_PENDING -> SETTLEMENT_PENDING -> SETTLED -> COMPLETED/CANCELLED`
 
-DRAFT -> PUBLISHED -> REGISTRATION_OPEN -> REGISTRATION_CLOSED -> IN_PROGRESS -> RESULT_PENDING -> SETTLEMENT_PENDING -> SETTLED -> COMPLETED/CANCELLED.
+# 5. REGISTRATION REQUIREMENTS — P0
 
-Transitions must be controlled and audited.
+Validate authentication, account status, competition state, time window, capacity, duplicate registration, dynamic fields, eligibility and entry-fee availability. Registration/payment consistency must be atomic.
 
-## 5. Registration requirements
+# 6. WALLET REQUIREMENTS — P0
 
-Registration must validate:
+Display available/reserved USD and immutable transaction history. The client cannot mutate balances.
 
-- authenticated player;
-- competition status;
-- registration window;
-- capacity;
-- duplicate registration;
-- required dynamic fields;
-- field formats;
-- eligibility rules;
-- entry-fee requirements.
+# 7. PAYMENT REQUIREMENTS — P1
 
-A registration must have a unique player+competition relationship unless the competition explicitly permits multiple entries.
+Clearly show payment method, source amount, estimated/confirmed USD equivalent, applicable fees, status and safe provider reference. MTN Mobile Money and Orange Money must be clearly labelled Cameroon-only.
 
-## 6. Wallet requirements
+# 8. ADMIN REQUIREMENTS — P1
 
-Wallet display must make USD clear.
+Provide operational visibility into users, competitions, registrations, deposits, liabilities, pending withdrawals, pending settlements, failed payment events, reconciliation differences and support workload.
 
-The player should see:
+# 9. AUDIT REQUIREMENTS — P0
 
-- available USD;
-- reserved USD where relevant;
-- transaction history;
-- deposit action;
-- withdrawal action.
+Sensitive actions retain actor, action, target, timestamp, reason where required and safe before/after information plus a correlation/reference ID.
 
-The client cannot directly alter wallet balances.
+# 10. UX REQUIREMENTS — P1
 
-## 7. Payment requirements
+Every asynchronous feature needs loading, empty, success and error states. Financial actions require confirmation and transparent amounts, fees, conversion information and status.
 
-Payment screens must clearly identify:
+# 11. AI IMPLEMENTATION DIRECTIVES
 
-- method;
-- amount in source denomination;
-- estimated/confirmed USD equivalent where applicable;
-- fees where applicable;
-- payment status;
-- provider/reference information when safe to expose.
+## P0
 
-Cameroon-only payment methods must be labelled appropriately.
+Do not implement requirements solely as static UI. Every financial/product action must map to a secure server-side domain operation and persistent state.
 
-## 8. Admin requirements
+## P1
 
-Administrators need operational visibility into:
+Build player and admin flows from the requirements above before adding optional polish.
 
-- total users;
-- active competitions;
-- registrations;
-- deposits;
-- wallet liabilities;
-- pending withdrawals;
-- pending settlements;
-- failed payment events;
-- reconciliation differences;
-- support workload.
+## P2
 
-## 9. Audit requirements
-
-For sensitive actions, retain:
-
-- actor;
-- action;
-- target entity;
-- before/after state where appropriate;
-- timestamp;
-- reason/comment where required;
-- correlation/reference ID.
-
-## 10. UX requirements
-
-The application must provide loading, empty, success, error and permission-denied states.
-
-Financial actions must display confirmation before irreversible or money-affecting operations.
-
-Do not hide important fees, conversion information, withdrawal status, or transaction state.
+Use reusable components, typed validation schemas and explicit state machines for status-driven workflows.
