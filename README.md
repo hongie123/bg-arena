@@ -2,49 +2,34 @@
 
 # 1. PURPOSE — P0
 
-BG Arena is a game-agnostic competitive gaming platform. This repository contains the implementation contract an AI coding agent can use to build the application.
+BG Arena is a modular, game-agnostic competitive gaming platform with a USD-denominated internal wallet and controlled external payment, settlement and payout boundaries.
 
-# 2. START HERE — P0
+# 2. AUTHORITATIVE DOCUMENTATION — P0
 
-**Read `CLAUDE.md` first.**
+The repository is specification-first. Read in this order:
 
-Then read:
+1. `CLAUDE.md`
+2. `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md`
+3. `docs/01-master-platform-specification.md`
+4. `docs/24-technical-architecture-and-development-blueprint.md`
+5. Domain-specific documents relevant to the task.
 
-1. `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md`
-2. `docs/01-master-platform-specification.md`
-3. `docs/02-product-requirements.md`
-4. `docs/03-system-architecture.md`
-5. `docs/04-supabase-database-schema.md`
-6. the specialized domain document required for the feature.
+# 3. CORE MODEL — P0
 
-Do not start coding after reading only README. The documentation set is deliberately split into product, architecture, database, security, financial and feature contracts.
+- Supabase PostgreSQL is the primary database.
+- Supabase Auth provides Google/email identity.
+- Phone authentication is not used.
+- Internal wallet currency is USD only.
+- Crypto deposits use NOWPayments.
+- Cameroon Mobile Money deposits use CamPay with MTN Cameroon and Orange Cameroon.
+- Payout execution is external and manually controlled through the private payout application.
+- The immutable financial ledger is the accounting source of truth.
+- Game-specific result logic is outside the BG Arena core.
 
-# 3. PRIORITY SYSTEM — P0
+# 4. DEVELOPMENT ORDER — P1
 
-- `#` = document authority.
-- `##` = major implementation area.
-- `###` = subsystem/detail.
-- `P0` = non-negotiable.
-- `P1` = required product behavior.
-- `P2` = preferred implementation.
-- `P3` = future/optional.
+Foundation → database/RLS → authentication/profiles → wallet/ledger → payment adapters → exchange rates → deposits → competitions/registrations → dashboards → settlements → withdrawals/payout export → reconciliation → administration/support → hardening/deployment.
 
-# 4. CORE DECISIONS — P0
+# 5. AI DEVELOPMENT RULE — P0
 
-- Supabase is the planned backend/database platform.
-- Internal accounting and wallet currency is USD.
-- Deposit currencies/assets are converted to USD at processing time using a configured exchange-rate source.
-- Cameroon launch payment methods include MTN Mobile Money and Orange Money.
-- MTN/Orange are explicitly Cameroon-only payment methods.
-- Crypto deposits are supported through a provider adapter.
-- Authentication is email-based; phone numbers are profile/contact data, not the authentication factor.
-- Competitions are game-agnostic and can define their own game-specific registration fields and settlement configuration.
-- BG Arena records and reserves withdrawal funds but does not execute payout-provider calls.
-- A separate private payout application executes external payouts.
-- Financial history is immutable and ledger-backed.
-
-# 5. AI BUILD RULE — P0
-
-The Markdown files are intended to be consumed by an AI coding agent. The agent must treat them as implementation instructions, not as a prompt to invent missing product behavior.
-
-When a requirement is unspecified, choose the smallest safe implementation and document the assumption. When a requirement conflicts with an explicit P0 rule, stop and resolve the conflict instead of silently changing the architecture.
+Do not ask an AI coding agent to “build the app” while ignoring the repository specifications. The intended workflow is to give the repository to the coding agent, instruct it to read `CLAUDE.md` and the documentation in the required order, then implement the application incrementally while preserving the documented architecture.
