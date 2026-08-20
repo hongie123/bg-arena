@@ -368,3 +368,21 @@ The following are not part of the current architecture unless explicitly reintro
 ## 22. Production philosophy
 
 BG Arena should be built as a small, understandable, auditable system rather than a collection of disconnected features. Financial correctness and security take priority over rapid UI completion.
+
+## 23. AI IMPLEMENTATION PRIORITY
+
+### P0 — MUST PRESERVE
+
+The decisions in this document are authoritative. Any generated code that conflicts with USD-only accounting, Supabase/RLS security, email authentication, game-agnostic core architecture, idempotent financial processing, or payout separation is incorrect.
+
+### P1 — MUST IMPLEMENT
+
+The complete player/admin flows, competition lifecycle, registration, wallet/ledger, deposits, exchange-rate snapshots, settlement, withdrawal reservation/export, reconciliation, notifications and support must be represented in code and data models.
+
+### P2 — IMPLEMENTATION GUIDANCE
+
+Prefer small domain services, explicit state machines, database constraints, server-side mutations and typed schemas. Keep provider-specific code behind adapters.
+
+### P0 — FORBIDDEN SHORTCUTS
+
+Do not use client-side balance mutations, fake payment success, invented provider APIs, hard-coded game-specific profile fields, direct payout calls, floating-point authoritative money calculations, or silent administrative database edits.
