@@ -1,31 +1,37 @@
 # AUTHENTICATION AND USER MANAGEMENT
 
-## Authentication
+# 1. AUTHENTICATION — P0
 
 Use Supabase Auth with email-based authentication. Supported flows should include registration, login, logout, email verification as configured, password reset and session management.
 
 Phone numbers are collected only as profile/contact/payment information and are not authentication factors.
 
-## Profile
+# 2. PROFILE — P1
 
-Create an application profile after successful account creation. The profile references the Supabase Auth user ID.
+Create an application profile after account creation. Reference the Supabase Auth user ID. Store first/last/display name, optional phone data, avatar initial/background key, status and timestamps. Never store passwords in application tables.
 
-Store first/last/display name, optional phone data, avatar initial/background key, status and timestamps. Do not store passwords in application tables.
+# 3. ROLES — P0
 
-## Roles
+At minimum: PLAYER and ADMIN. Role assignment is server-protected and cannot be changed by players.
 
-At minimum: PLAYER and ADMIN. Role assignment must be protected from client modification.
+# 4. AUTHORIZATION — P0
 
-A suspended/closed account must be prevented from actions according to status policy. Existing financial history remains auditable.
+Authentication proves identity; authorization determines capability. Every admin operation requires server-side role verification. RLS must prevent cross-user data access.
 
-## Authorization
+# 5. ACCOUNT CHANGES — P1
 
-Authentication proves identity; authorization determines what the user can do. Every admin operation requires server-side role verification.
+Email changes and sensitive authentication changes use secure provider mechanisms. Phone changes are validated and audited.
 
-## Account changes
+# 6. PRIVACY — P0
 
-Email changes and other sensitive changes must use the authentication provider's secure mechanisms. Phone changes should be validated and audited.
+Return only minimum necessary data. Never expose private withdrawal destinations or administrative information to other players.
 
-## Privacy
+# 7. AI IMPLEMENTATION DIRECTIVES
 
-Return only the minimum profile/payment data required by each UI. Do not expose private withdrawal destination details to other players.
+## P0
+
+Never implement phone authentication, client-controlled roles, client-trusted sessions for authorization, or plaintext passwords.
+
+## P1
+
+Implement protected routes plus server-side authorization and RLS. Test suspended/closed accounts.
