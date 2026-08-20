@@ -1,46 +1,37 @@
 # GAMES, COMPETITIONS AND TOURNAMENTS
 
-## Game-agnostic model
+# 1. GAME-AGNOSTIC MODEL — P0
 
-A game is a catalog entity. A competition references a game but owns its own operational configuration.
+A game is a catalog entity. A competition references a game but owns its operational configuration. Never add `pubg_id`, `codm_uid` or similar permanent profile fields.
 
-Never add columns such as `pubg_id`, `codm_uid`, or similar to the core profile table.
+# 2. COMPETITION CONFIGURATION — P1
 
-## Competition configuration
+A competition defines game, format, title/description, rules, registration window, event schedule, capacity, USD entry fee, USD prize structure, dynamic registration fields, settlement configuration and status.
 
-A competition can define:
+# 3. FORMATS — P1
 
-- game;
-- format;
-- title/description;
-- rules;
-- registration window;
-- event schedule;
-- capacity;
-- USD entry fee;
-- USD prize structure;
-- registration fields;
-- settlement configuration;
-- status.
+The model must support tournaments, matches, brackets, leagues and future formats without changing wallet architecture.
 
-## Formats
+# 4. STATUS LIFECYCLE — P0
 
-The data model should permit tournaments, single matches, brackets, leagues or other formats without changing wallet architecture.
+`DRAFT -> PUBLISHED -> REGISTRATION_OPEN -> REGISTRATION_CLOSED -> IN_PROGRESS -> RESULT_PENDING -> SETTLEMENT_PENDING -> SETTLED -> COMPLETED`
 
-## Status lifecycle
+Cancellation paths must define entry-fee/refund consequences.
 
-DRAFT -> PUBLISHED -> REGISTRATION_OPEN -> REGISTRATION_CLOSED -> IN_PROGRESS -> RESULT_PENDING -> SETTLEMENT_PENDING -> SETTLED -> COMPLETED.
+# 5. PRIZES — P0
 
-Cancellation paths must be explicit and must define entry-fee/refund consequences.
+Prize amounts are USD. Settlement cannot exceed configured distributable amounts. Platform fees, if introduced, must be explicitly configured and represented.
 
-## Prize configuration
+# 6. ELIGIBILITY — P0
 
-Prize amounts are stored/calculated in USD. A competition must not settle more than its configured distributable prize amount. Any platform fee must be explicitly configured and represented in the financial model.
+Validate status, timing, capacity, duplicate registration, required fields, account status and entry-fee requirements server-side.
 
-## Registration eligibility
+# 7. AI IMPLEMENTATION DIRECTIVES
 
-Validate status, timing, capacity, duplicate registration, required fields, player account status and entry-fee requirements.
+## P0
 
-## Competition-specific rules
+Core competition services must not contain game-specific settlement assumptions.
 
-Rules and game-specific result/registration requirements are attached to the competition or a reusable configuration. Core services consume normalized outputs.
+## P1
+
+Implement state transitions as explicit validated operations, not arbitrary status updates.
