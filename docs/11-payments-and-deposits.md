@@ -1,45 +1,43 @@
 # PAYMENTS AND DEPOSITS
 
-## Supported launch methods
+# 1. LAUNCH METHODS — P1
 
-Cameroon launch:
+Cameroon launch: MTN Mobile Money, Orange Money and cryptocurrency through the configured provider. Integrations are adapter-based.
 
-- MTN Mobile Money;
-- Orange Money;
-- cryptocurrency through the configured provider.
+# 2. PAYMENT STATES — P0
 
-Provider integrations must be adapter-based.
+Use explicit states such as CREATED, PENDING, CONFIRMED, PROCESSING, CREDITED, FAILED, EXPIRED, CANCELLED and REVERSED as required by the provider flow.
 
-## Payment states
+# 3. PROOF OF PAYMENT — P0
 
-A deposit should use explicit states such as CREATED, PENDING, CONFIRMED, PROCESSING, CREDITED, FAILED, EXPIRED, CANCELLED or REVERSED as required by the provider flow.
+Browser redirects/client callbacks are not authoritative. Credit only from trusted provider confirmation/webhook or controlled authorized administrative confirmation.
 
-## Critical rule
+# 4. PROVIDER EVENTS — P0
 
-A browser redirect or client callback is not sufficient proof of payment. The server must rely on a trusted provider response/webhook or controlled administrative confirmation according to the provider integration.
+Verify provider authentication/signatures, capture provider payment/event IDs, enforce idempotency, persist event state and perform one atomic USD wallet credit.
 
-## Provider event handling
+# 5. CAMEROON MOBILE MONEY — P1
 
-Validate signature/authentication where provided. Extract provider payment ID and event ID. Check whether the event has already been processed. Persist the event/payment state before performing financial mutation where appropriate. Then perform one atomic USD wallet credit.
+MTN Mobile Money and Orange Money are Cameroon-specific. Country/payment-method availability must be configuration-driven so international methods can be added later.
 
-## Cameroon mobile money
+# 6. CRYPTO — P1
 
-The UI must make it clear that MTN Mobile Money and Orange Money are Cameroon-specific payment options. The architecture must allow country/payment-method availability to be configuration-driven.
+Preserve asset, network, expected/actual amount, provider invoice/payment ID, transaction hash when available, confirmation state and final USD conversion. Never credit merely because an address was displayed.
 
-## Crypto
+# 7. FEES — P1
 
-The crypto adapter must preserve asset, network where relevant, expected amount, actual amount, provider invoice/payment ID, transaction/hash reference where available, confirmation status and final USD conversion information.
+Provider/platform/network fees must be explicit. Never silently alter credited amounts.
 
-Do not credit based only on an address being displayed. Use the provider's confirmed payment state.
+# 8. RECONCILIATION — P0
 
-## Fees
+Every deposit must retain original amount/asset, conversion rate/source/time, provider references and resulting ledger transaction. Provider records must be reconcilable to internal deposit IDs.
 
-Provider fees, platform fees and network fees must be represented explicitly if charged. Never hide fees by silently changing the credited amount.
+# 9. AI IMPLEMENTATION DIRECTIVES
 
-## Deposit records
+## P0
 
-Every deposit must retain enough data to reconstruct why and how much USD was credited, including original amount, asset/currency, rate, rate source, timestamps, provider reference and resulting wallet transaction.
+Do not invent provider API behavior. Provider-specific payloads stay inside adapters, and secrets stay server-side.
 
-## Reconciliation
+## P1
 
-Provider records and BG Arena deposit records must be reconcilable by provider payment ID/event ID and internal deposit ID.
+Implement provider interfaces so adding another payment method does not modify wallet accounting logic.
