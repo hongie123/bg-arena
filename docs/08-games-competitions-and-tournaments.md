@@ -1,37 +1,31 @@
-# GAMES, COMPETITIONS AND TOURNAMENTS
+# BG ARENA — GAMES, COMPETITIONS AND TOURNAMENTS
 
-# 1. GAME-AGNOSTIC MODEL — P0
+# 1. CORE RULE — P0
+The competition system is game-agnostic. The core must not contain PUBG/CODM/Free Fire scoring formulas, kill logic or game-specific settlement assumptions.
 
-A game is a catalog entity. A competition references a game but owns its operational configuration. Never add `pubg_id`, `codm_uid` or similar permanent profile fields.
+# 2. COMPETITION MODEL — P1
+A competition contains identity, game label/reference, format, title, description, rules, schedule, registration window, capacity, entry fee USD, prize configuration, status, custom registration schema and settlement configuration.
 
-# 2. COMPETITION CONFIGURATION — P1
+# 3. GAME REFERENCE — P1
+Game is informational/configurable. A game catalog may be introduced, but adding a game must not require new profile columns or changes to wallet/ledger code.
 
-A competition defines game, format, title/description, rules, registration window, event schedule, capacity, USD entry fee, USD prize structure, dynamic registration fields, settlement configuration and status.
+# 4. LIFECYCLE — P0
+DRAFT → PUBLISHED → REGISTRATION_OPEN → REGISTRATION_CLOSED → LIVE → RESULT_PENDING → SETTLEMENT_PENDING → COMPLETED, with CANCELLED/ARCHIVED terminal or policy-specific branches.
 
-# 3. FORMATS — P1
+# 5. CAPACITY — P1
+Registration must enforce capacity atomically to prevent overbooking under concurrent requests.
 
-The model must support tournaments, matches, brackets, leagues and future formats without changing wallet architecture.
+# 6. ENTRY FEE — P0
+Entry fee is USD. Registration must atomically verify available funds, create the financial transaction/ledger debit and registration confirmation. If any step fails, no partial registration/payment remains.
 
-# 4. STATUS LIFECYCLE — P0
+# 7. PRIZES — P1
+Prize amounts are USD and must be validated against competition configuration. Settlement may distribute prizes according to external result data and configured rules.
 
-`DRAFT -> PUBLISHED -> REGISTRATION_OPEN -> REGISTRATION_CLOSED -> IN_PROGRESS -> RESULT_PENDING -> SETTLEMENT_PENDING -> SETTLED -> COMPLETED`
+# 8. EDITING — P0
+Do not silently modify financially significant published values. Use explicit state/policy for changes to entry fee, prize pool, schedule or capacity.
 
-Cancellation paths must define entry-fee/refund consequences.
+# 9. DISCOVERY — P1
+Player listing supports filtering by game, status, date and format. Never expose unpublished/admin-only competitions.
 
-# 5. PRIZES — P0
-
-Prize amounts are USD. Settlement cannot exceed configured distributable amounts. Platform fees, if introduced, must be explicitly configured and represented.
-
-# 6. ELIGIBILITY — P0
-
-Validate status, timing, capacity, duplicate registration, required fields, account status and entry-fee requirements server-side.
-
-# 7. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-Core competition services must not contain game-specific settlement assumptions.
-
-## P1
-
-Implement state transitions as explicit validated operations, not arbitrary status updates.
+# 10. TESTS — P0
+Test concurrent registration, duplicate registration, insufficient balance, cancelled competition, capacity boundary, schedule boundaries, entry fee atomicity and game-agnostic data storage.

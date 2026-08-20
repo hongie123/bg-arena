@@ -1,33 +1,31 @@
-# REGISTRATION SYSTEM
+# BG ARENA — REGISTRATION SYSTEM
 
-# 1. REGISTRATION FLOW — P0
+# 1. PURPOSE — P1
+Registration connects a player to a specific competition and captures that competition's required information without permanently modifying the player's generic profile.
 
-`authenticate -> load competition -> verify accepting registrations -> verify account -> load dynamic fields -> validate -> check capacity/duplicates -> determine fee -> debit/collect -> create registration -> notify`
+# 2. DATA MODEL — P0
+Registration references user, competition, status, timestamps, payment/financial transaction reference and dynamic field values. Dynamic values reference competition-defined custom fields.
 
-The registration and entry-fee relationship must be atomic/coherent.
+# 3. CUSTOM FIELDS — P1
+Fields can represent game ID, username, team, region, device or other competition-specific information. Each field defines type, required flag, validation constraints, display order and optional choices.
 
-# 2. DYNAMIC FIELDS — P1
+# 4. VALIDATION — P0
+Server validates every dynamic value against the competition schema. Client validation is only a UX aid. Reject unknown fields, invalid types, missing required values and values outside constraints.
 
-Competition-defined fields may include in-game username, player ID, team, region or other game-specific data. Definitions contain type, label, required flag, order and validation configuration.
+# 5. REGISTRATION FLOW — P0
+Check authentication → load published competition → verify registration window → verify capacity → validate fields → check duplicate registration → verify USD funds → atomically debit entry fee and create registration → return authoritative registration state.
 
-# 3. PAYMENT — P0
+# 6. DUPLICATES — P0
+A player cannot create two active registrations for the same competition unless the competition explicitly supports multiple slots/entries. Database constraints should enforce the default rule.
 
-A failed wallet debit must not create a paid registration. If a deposit is needed first, registration remains unpaid/pending until the USD balance is actually credited.
+# 7. PAYMENT LINK — P0
+Registration payment must reference a financial transaction. Never mark a registration paid merely because the client sent `paid=true`.
 
-# 4. CANCELLATION/REFUND — P0
+# 8. CANCELLATION/REFUND — P1
+If policy allows cancellation/refund, use a compensating financial transaction and audit event. Never delete the original ledger entry.
 
-Competition cancellation follows configured refund policy. Refunds are compensating USD ledger credits referencing the original entry transaction and reason.
+# 9. PLAYER VIEW — P1
+Show registration status, competition information, submitted values where appropriate, payment status and relevant instructions.
 
-# 5. MULTIPLE ENTRIES — P1
-
-Default is one registration per player per competition. Multiple entries require explicit competition configuration and unique entry identity.
-
-# 6. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-Never trust client-submitted competition price, eligibility or registration status. Recalculate/validate on the server.
-
-## P1
-
-Validate dynamic fields against server-stored definitions and test capacity/duplicate race conditions.
+# 10. TESTS — P0
+Required tests include duplicate registration, capacity race, insufficient funds, invalid dynamic fields, closed registration, authorization and atomic payment/registration behavior.

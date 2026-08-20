@@ -1,83 +1,40 @@
 # BG ARENA — SUPABASE DATABASE SCHEMA
 
-# 1. SCHEMA AUTHORITY — P0
+# 1. DATABASE AUTHORITY — P0
+Supabase PostgreSQL is the authoritative application database. Migrations define schema. Production schema must never be changed manually without a migration/checkpoint.
 
-This document defines the logical schema. SQL migrations must preserve these relationships, constraints and financial invariants.
+# 2. IDENTITY TABLES — P0
+`profiles`: id, user_id, first_name, last_name, username, email, phone_number, phone_verified, country_code, account_status, created_at, updated_at. `admin_roles`: user_id, role, status, created_at, updated_at. Auth identity remains in Supabase Auth.
 
-## profiles — P0
+# 3. COMPETITION TABLES — P1
+`competitions`, `competition_custom_fields`, `competition_custom_field_options`, `competition_registrations`, `competition_registration_values`. Foreign keys must enforce ownership relationships. Dynamic fields allow game-specific identifiers without polluting profiles.
 
-Application profile linked to `auth.users`. Store identity/contact/display data, protected role/status and avatar initial/background key. Never store game-specific IDs or passwords here.
+# 4. FINANCE TABLES — P0
+`wallet_accounts`, `ledger_entries`, `financial_transactions`, `financial_reservations`, `deposits`, `payment_methods`, `payment_provider_transactions`, `payment_events`, `exchange_rate_snapshots`.
 
-## wallets — P0
+# 5. SETTLEMENT/WITHDRAWAL TABLES — P0
+`settlements`, `settlement_items`, `withdrawals`, `withdrawal_events`.
 
-One primary USD wallet per player. Store available and reserved minor units. Enforce one primary wallet per user and USD as the only internal currency.
+# 6. COMMUNICATION TABLES — P1
+`notifications`, `support_conversations`, `support_messages`, `disputes`.
 
-## wallet_transactions — P0
+# 7. ADMIN TABLES — P0
+`audit_logs`, `system_controls`.
 
-Immutable ledger. Include wallet/user, transaction type, direction, exact amount, currency, source reference, idempotency key, timestamps and safe metadata. Corrections use compensating entries.
+# 8. FINANCIAL COLUMN RULES — P0
+Internal money must be represented using integer minor units or exact numeric/decimal, never binary floating point. Store currency explicitly even though wallet currency is USD. Provider amounts retain source currency/asset. Use UTC timestamps.
 
-## competitions — P1
+# 9. REQUIRED CONSTRAINTS — P0
+Unique deposit reference; unique idempotency key; unique provider+provider transaction ID where provider guarantees it; valid foreign keys; non-negative amounts where applicable; valid status values; one primary USD wallet per player; no orphan financial records.
 
-Store game reference, title, description, format, status, registration/event times, capacity, USD entry fee, prize configuration, rules and settlement configuration.
+# 10. LEDGER IMMUTABILITY — P0
+Ledger rows are append-only. Corrections use compensating transactions. RLS must prevent normal players from inserting/updating/deleting ledger rows.
 
-## games — P1
+# 11. RLS MODEL — P0
+Player SELECT policies use `auth.uid()` against owner/user ID. Financial INSERT/UPDATE is server-side only. Admin SELECT/write policies require explicit role/permission checks. Service-role access is never exposed to browser clients.
 
-Normalized game catalog. Game records must not force game-specific fields into profiles.
+# 12. MIGRATION ORDER — P0
+Foundation → profiles → competitions → wallet → ledger → transactions → reservations → payment methods → deposits → provider transactions → payment events → rate snapshots → settlements → withdrawals → notifications/support/disputes → audit/system controls.
 
-## competition_registration_fields — P1
-
-Dynamic field definitions with key, label, type, required flag, validation configuration and display order.
-
-## registrations — P0
-
-Player/competition relationship with status, timestamp and entry-fee reference. Enforce duplicate-entry policy at database/business-rule level.
-
-## registration_field_values — P0
-
-Values submitted for the competition-defined fields. Validate according to the field definition.
-
-## deposits — P0
-
-Preserve provider, provider payment/event IDs, source type, source currency/asset, exact source amount, exact exchange rate, rate source/timestamp, USD credit, fees, status and resulting ledger transaction. Unique provider references prevent duplicate credits.
-
-## withdrawals — P0
-
-Store requested USD amount, payout method, minimized destination reference, status, reservation transaction, payout instruction version and external reference. Never store payout-provider credentials.
-
-## settlement_runs / settlement_results — P0
-
-Persist imported/validated result snapshots, calculation snapshot, confirmation actor/time and per-registration winnings. Constraints prevent duplicate financial settlement.
-
-## notifications / support / audit — P1
-
-Use ownership/role-based access. Audit records are append-oriented and must not contain secrets.
-
-## exchange_rate_snapshots — P0
-
-Optionally persist normalized rate snapshots containing source asset, USD quote, exact rate, provider and timestamp. Deposit records must independently preserve the rate actually used.
-
-# 2. RLS — P0
-
-Players can access only permitted rows belonging to themselves. Players cannot update balances, ledger entries, settlement outcomes, payment status, withdrawal approval state or roles. Admin access is narrowly scoped and server-authorized.
-
-# 3. CONSTRAINTS AND INDEXES — P0
-
-Foreign keys, unique provider references, unique idempotency keys, wallet ownership, non-negative monetary values and appropriate status constraints must be enforced. Index operational queries for users, competitions, registrations, transactions, deposits, withdrawals, settlements, notifications and audit logs.
-
-# 4. MIGRATIONS — P0
-
-Every schema change is a versioned migration. Never manually alter production schema outside the migration process.
-
-# 5. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-The database is a security boundary, not merely storage. Encode important invariants with PostgreSQL constraints/RLS where practical.
-
-## P1
-
-Create migrations in dependency order and test RLS with both player and admin identities.
-
-## P2
-
-Prefer normalized relationships for core entities and JSONB only where configuration is genuinely dynamic.
+# 13. MIGRATION QUALITY — P1
+Every migration must be deterministic, reviewable and reversible where practical. Seed only non-secret configuration. Never put provider credentials in seed data.

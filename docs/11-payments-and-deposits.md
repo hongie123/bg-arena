@@ -1,43 +1,43 @@
-# PAYMENTS AND DEPOSITS
+# BG ARENA — PAYMENTS AND DEPOSITS
 
-# 1. LAUNCH METHODS — P1
+# 1. PURPOSE — P0
+This document governs external deposit processing. It must be read with the technical blueprint, wallet/ledger and exchange-rate documents.
 
-Cameroon launch: MTN Mobile Money, Orange Money and cryptocurrency through the configured provider. Integrations are adapter-based.
+# 2. PROVIDERS — P0
+NOWPayments = crypto deposit adapter. CamPay = mobile-money adapter. Current mobile networks = MTN Cameroon and Orange Cameroon. Provider-specific logic remains under infrastructure/payments.
 
-# 2. PAYMENT STATES — P0
+# 3. PAYMENT METHOD CONFIGURATION — P1
+Database-driven methods include NOWPAYMENTS_CRYPTO, CAMPAY_MTN_CM and CAMPAY_ORANGE_CM. Store provider, network, country capability, supported currency/asset, enabled state, display order and public description. Never store secrets in user-readable configuration.
 
-Use explicit states such as CREATED, PENDING, CONFIRMED, PROCESSING, CREDITED, FAILED, EXPIRED, CANCELLED and REVERSED as required by the provider flow.
+# 4. DEPOSIT INTENT — P0
+Create an intent before provider payment. It has stable reference, user, target amount/currency, method, provider, state, expiration and idempotency key. No wallet credit occurs at intent creation.
 
-# 3. PROOF OF PAYMENT — P0
+# 5. CRYPTO FLOW — P0
+Create deposit → call NOWPayments server-side → attach provider IDs → display payment asset/network/address/instructions → receive webhook or controlled status → authenticate/validate → idempotency → record source amount/asset → determine authoritative USD conversion → ledger credit.
 
-Browser redirects/client callbacks are not authoritative. Credit only from trusted provider confirmation/webhook or controlled authorized administrative confirmation.
+# 6. MOBILE MONEY FLOW — P0
+Create deposit → select MTN/Orange Cameroon → CamPay server-side request → display payment instructions → receive/verify provider status → match provider transaction + deposit reference + amount/currency/method → convert XAF→USD → ledger credit.
 
-# 4. PROVIDER EVENTS — P0
+# 7. GLOBAL MOBILE MONEY UI — P1
+The option may be visible internationally. The UI must say direct support currently covers MTN Cameroon and Orange Cameroon only. Never imply global MTN/Orange support. A trusted person in Cameroon may pay if the provider flow permits it; matching remains tied to the player's deposit intent, not payer identity assumptions.
 
-Verify provider authentication/signatures, capture provider payment/event IDs, enforce idempotency, persist event state and perform one atomic USD wallet credit.
+# 8. WEBHOOK SECURITY — P0
+Webhook route is server-only. Verify provider signature/authentication as supported. Parse safely. Reject malformed/unauthenticated events. Check provider transaction, deposit reference, expected amount, currency/asset, state and duplicate history before financial mutation.
 
-# 5. CAMEROON MOBILE MONEY — P1
+# 9. STATE MACHINE — P0
+CREATED → AWAITING_PAYMENT → PAYMENT_DETECTED → PAYMENT_CONFIRMED → CONVERSION_PENDING → CREDIT_PENDING → COMPLETED. Failure/review states include EXPIRED, FAILED, REVIEW_REQUIRED, PAYMENT_MISMATCH, CONVERSION_FAILED and CREDIT_FAILED.
 
-MTN Mobile Money and Orange Money are Cameroon-specific. Country/payment-method availability must be configuration-driven so international methods can be added later.
+# 10. AMOUNT POLICY — P0
+Requested target USD, provider payment amount, received source amount, provider fees and final USD credit must be distinct fields. Underpayment/overpayment cannot silently become a full target credit; apply configured policy or REVIEW_REQUIRED.
 
-# 6. CRYPTO — P1
+# 11. DUPLICATE PROTECTION — P0
+Unique provider transaction identifiers and internal idempotency references must be enforced in both application logic and database constraints.
 
-Preserve asset, network, expected/actual amount, provider invoice/payment ID, transaction hash when available, confirmation state and final USD conversion. Never credit merely because an address was displayed.
+# 12. TIMEOUT/RETRY — P0
+If provider creation times out, reconcile status before retrying. Use stable internal idempotency reference. Do not create two external payments for one user action.
 
-# 7. FEES — P1
+# 13. RECONCILIATION — P1
+Admin must trace deposit → provider transaction → source amount → exchange-rate snapshot → financial transaction → ledger entry.
 
-Provider/platform/network fees must be explicit. Never silently alter credited amounts.
-
-# 8. RECONCILIATION — P0
-
-Every deposit must retain original amount/asset, conversion rate/source/time, provider references and resulting ledger transaction. Provider records must be reconcilable to internal deposit IDs.
-
-# 9. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-Do not invent provider API behavior. Provider-specific payloads stay inside adapters, and secrets stay server-side.
-
-## P1
-
-Implement provider interfaces so adding another payment method does not modify wallet accounting logic.
+# 14. TEST MATRIX — P0
+Test success, duplicate webhook, fake webhook, wrong player, wrong currency, underpayment, overpayment, expired payment, provider timeout, provider outage, conversion failure, retry recovery and one-time ledger credit.

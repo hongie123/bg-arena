@@ -1,37 +1,31 @@
-# AUTHENTICATION AND USER MANAGEMENT
+# BG ARENA — AUTHENTICATION AND USER MANAGEMENT
 
-# 1. AUTHENTICATION — P0
+# 1. IDENTITY AUTHORITY — P0
+Supabase Auth owns authentication identity. The application profile is an extension of authenticated identity, not a replacement for it.
 
-Use Supabase Auth with email-based authentication. Supported flows should include registration, login, logout, email verification as configured, password reset and session management.
+# 2. AUTH METHODS — P0
+Support Google OAuth and email identity according to configured Supabase Auth providers. Phone authentication is explicitly disabled. Do not create password/phone flows outside the approved identity model.
 
-Phone numbers are collected only as profile/contact/payment information and are not authentication factors.
+# 3. AUTH CALLBACK — P0
+OAuth/email callback validates the authenticated session, creates or updates the profile safely, then redirects according to account state. Never trust redirect parameters to grant authorization.
 
-# 2. PROFILE — P1
+# 4. PROFILE CREATION — P0
+On first authenticated access, create a profile with safe defaults. Username uniqueness must be enforced server-side/database-side. Email comes from trusted auth identity, not a browser-submitted replacement.
 
-Create an application profile after account creation. Reference the Supabase Auth user ID. Store first/last/display name, optional phone data, avatar initial/background key, status and timestamps. Never store passwords in application tables.
+# 5. PHONE NUMBER — P1
+Collect phone number as profile/payment/support information. Verification, if implemented, verifies contact ownership but does not turn the phone number into a login credential. Do not use phone number equality as payment ownership proof.
 
-# 3. ROLES — P0
+# 6. ACCOUNT STATES — P0
+Define ACTIVE, RESTRICTED, SUSPENDED and CLOSED semantics. Suspended/restricted accounts must be blocked from appropriate operations while preserving financial history.
 
-At minimum: PLAYER and ADMIN. Role assignment is server-protected and cannot be changed by players.
+# 7. AUTHORIZATION — P0
+Authentication answers “who are you?” Authorization answers “what may you do?” Every protected server operation performs authorization independently. Never rely on hidden UI controls as authorization.
 
-# 4. AUTHORIZATION — P0
+# 8. ADMIN IDENTITY — P0
+Admin status comes from protected database role/permission records. Never trust a client-provided `is_admin` flag. Privileged actions create audit records.
 
-Authentication proves identity; authorization determines capability. Every admin operation requires server-side role verification. RLS must prevent cross-user data access.
+# 9. SESSION SECURITY — P0
+Use secure cookies/session mechanisms supplied by Supabase/Next.js. Do not expose access/refresh tokens in logs. Logout clears local authenticated state and invalidates access according to provider semantics.
 
-# 5. ACCOUNT CHANGES — P1
-
-Email changes and sensitive authentication changes use secure provider mechanisms. Phone changes are validated and audited.
-
-# 6. PRIVACY — P0
-
-Return only minimum necessary data. Never expose private withdrawal destinations or administrative information to other players.
-
-# 7. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-Never implement phone authentication, client-controlled roles, client-trusted sessions for authorization, or plaintext passwords.
-
-## P1
-
-Implement protected routes plus server-side authorization and RLS. Test suspended/closed accounts.
+# 10. TESTS — P0
+Test unauthenticated access, cross-user access, suspended users, admin/non-admin separation, OAuth callback, email identity, profile creation races and attempts to forge authorization fields.

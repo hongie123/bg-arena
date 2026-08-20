@@ -1,51 +1,34 @@
-# PLAYER DASHBOARD
+# BG ARENA — PLAYER DASHBOARD SPECIFICATION
 
-# 1. NAVIGATION — P1
+# 1. PURPOSE — P1
+The player application is the safe, simple interface through which authenticated players manage competitions, wallet, results, notifications and support.
 
-Dashboard, Games/Tournaments, Wallet, Results & History, Notifications, Tutorials, Support, Account/Settings.
+# 2. NAVIGATION — P1
+Dashboard; Games/Tournaments; Wallet; Results & History; Notifications; Tutorials; Support; Account/Settings.
 
-# 2. DASHBOARD — P1
+# 3. DASHBOARD HOME — P1
+Show greeting, avatar initial, USD available balance, reserved balance when relevant, active/upcoming competitions, recent transactions, notifications and useful calls to action. Do not expose raw provider/internal security data.
 
-Show available USD balance, reserved balance where relevant, active/upcoming registrations, recent results, relevant notifications and shortcuts to competitions/deposit/withdrawal. Never expose admin controls.
+# 4. WALLET DISPLAY — P0
+Wallet balance comes from authoritative server/ledger-derived data. Never calculate or mutate authoritative balance in client state. Clearly display `$`/USD.
 
-# 3. GAMES/TOURNAMENTS — P1
+# 5. COMPETITION CARDS — P1
+Show title, game, format, schedule, entry fee USD, prize information, capacity/status and registration action. Avoid showing stale status after mutations; refresh authoritative state.
 
-Provide browse/search/filter capabilities. Competition cards/details must make game, status, schedule, entry fee USD, capacity/availability, prize information and registration requirements clear.
+# 6. ASYNC STATES — P1
+Every page defines loading skeleton, empty state, success state, recoverable error and unavailable state. Financial operations also show pending/review states.
 
-# 4. WALLET — P0
+# 7. DEPOSIT UX — P1
+Player selects target USD amount and payment method. Crypto selector and mobile-money network selector are provider-driven. Estimates are clearly labeled. Final credit is only shown after confirmed server processing.
 
-Show USD balance, reserved amount, transactions, deposit and withdrawal actions. Deposit history should show source currency/amount and resulting USD credit where appropriate.
+# 8. HISTORY — P1
+Transaction history shows USD financial effect and, for deposits, original payment amount/currency/provider when appropriate. Historical records are read-only to players.
 
-# 5. RESULTS & HISTORY — P1
+# 9. SETTINGS — P1
+Allow profile/contact settings, notification preferences and account actions. Do not expose secrets or admin controls.
 
-Show registrations, participation, placements, winnings and relevant financial references without exposing another player's private data.
+# 10. ACCESSIBILITY/RESPONSIVENESS — P2
+Controls have labels, keyboard/focus behavior, useful error text and responsive layouts suitable for mobile-first usage.
 
-# 6. NOTIFICATIONS — P1
-
-Show unread count, notification list and read/unread state.
-
-# 7. TUTORIALS — P2
-
-Explain registration, deposits, competitions, wallet, withdrawals and platform rules in lightweight language.
-
-# 8. SUPPORT — P1
-
-Players can create/reply to tickets and see status.
-
-# 9. ACCOUNT/SETTINGS — P1
-
-Profile/contact data, authentication/security settings, account status and logout.
-
-# 10. UI STATES — P0
-
-Every page needs loading, empty, success and error states. Money must identify USD. Money-affecting/destructive actions require confirmation.
-
-# 11. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-The dashboard is a presentation layer. It must never perform authoritative wallet, registration or settlement mutations directly.
-
-## P1
-
-Every displayed financial value must come from authorized server/database data, not locally invented calculations.
+# 11. SECURITY — P0
+Never embed service-role keys, provider credentials or trusted financial mutations in client code. Never accept a client-computed balance as authoritative.

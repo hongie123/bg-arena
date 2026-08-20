@@ -1,47 +1,31 @@
-# WITHDRAWALS AND EXTERNAL PAYOUTS
+# BG ARENA — WITHDRAWALS AND EXTERNAL PAYOUTS
 
-# 1. SEPARATION PRINCIPLE — P0
-
-BG Arena manages the player's financial obligation but does not execute payout-provider API calls.
+# 1. SECURITY BOUNDARY — P0
+BG Arena manages withdrawal requests and financial reservations but does not execute external payouts. Payout credentials and API calls belong exclusively to the private payout application.
 
 # 2. REQUEST FLOW — P0
+Player submits amount/destination → server validates → check account restrictions → check available USD → create reservation atomically → create withdrawal → PENDING → notify admin → generate payout instruction JSON.
 
-`player -> validation -> funds reservation -> PENDING -> admin notification -> payout instruction -> private payout application -> external payout -> reconciliation -> final status`
+# 3. RESERVATION — P0
+Reserve requested USD before the payout is handed off. Available balance decreases immediately while total ledger ownership remains represented. Reservation states are explicit.
 
-# 3. VALIDATION — P0
+# 4. PAYOUT DATA — P0
+Generated payout JSON must contain only the minimum information required by the private payout application: withdrawal reference, player/account reference, payout method, destination, amount/currency as approved and metadata needed for reconciliation. Never include BG Arena secrets.
 
-Validate authenticated account, account status, amount > 0, sufficient available balance, supported method, destination data, eligibility and conflicting withdrawal state before reservation.
+# 5. EXTERNAL OUTCOME — P0
+Possible outcomes: completed, failed, rejected, cancelled, unknown/pending. Unknown external outcome must not automatically release funds. Keep reservation active until reconciliation.
 
-# 4. RESERVATION — P0
+# 6. COMPLETION — P0
+On verified external success, consume/finalize reservation and create the corresponding financial transaction. On verified failure/rejection, release reservation according to policy. Every transition is audited.
 
-Reservation is atomic. Reserved funds cannot satisfy another withdrawal or entry fee.
+# 7. ADMIN CONTROL — P0
+Admin may approve/reject/reconcile according to permissions. A withdrawal cannot be completed solely by changing a UI status; the server must enforce the valid transition and evidence requirements.
 
-# 5. PAYOUT JSON — P1
+# 8. PLAYER EXPERIENCE — P1
+Show requested USD amount, destination summary (masked), status, created date and status history. Never show provider secrets or internal credentials.
 
-Instruction contains withdrawal ID, internal beneficiary reference, payout method, required destination, USD amount, required external conversion information, timestamp and integrity/reference information. Never include BG Arena secrets.
+# 9. FRAUD/SAFETY — P0
+Validate minimum/maximum withdrawal, account status, available funds, destination format and required player verification. Never trust a client-supplied available balance.
 
-# 6. PRIVATE PAYOUT APPLICATION — P0
-
-The independent application owns its database, authentication, credentials, provider integrations and execution logs. It is a separate trust boundary.
-
-# 7. COMPLETION — P0
-
-External payout outcomes must reference the withdrawal ID. Completion is idempotent.
-
-# 8. FAILURE/AMBIGUITY — P0
-
-Known failure can release reservation according to the state machine. Ambiguous provider state must not automatically release funds until reconciliation.
-
-# 9. PRIVACY — P0
-
-Payout destination data is sensitive and minimized/restricted.
-
-# 10. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-Never import payout-provider credentials into BG Arena. Never implement a hidden direct payout call as a shortcut.
-
-## P1
-
-Generate a stable, versioned payout instruction schema that can be manually transferred to the private payout application.
+# 10. TESTS — P0
+Test insufficient funds, concurrent withdrawal requests, duplicate submission, reservation race, admin authorization, external success, external failure, unknown outcome and safe recovery.

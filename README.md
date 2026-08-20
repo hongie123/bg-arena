@@ -1,35 +1,31 @@
 # BG ARENA
 
 # 1. PURPOSE — P0
+BG Arena is a game-agnostic competitive gaming platform with a USD-denominated internal wallet, competition registration, controlled settlement, deposits through crypto and Cameroon mobile money, and manually controlled external payouts.
 
-BG Arena is a modular, game-agnostic competitive gaming platform with a USD-denominated internal wallet and controlled external payment, settlement and payout boundaries.
+# 2. THIS REPOSITORY — P0
+This repository is the development specification and eventual application codebase. The `docs/` directory is intentionally detailed enough for Claude, Antigravity or another coding agent to implement the application without requiring a second giant conversational prompt.
 
-# 2. AUTHORITATIVE DOCUMENTATION — P0
+# 3. START HERE — P0
+Read in this order:
+1. `CLAUDE.md`.
+2. `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md`.
+3. `docs/01-master-platform-specification.md`.
+4. `docs/24-technical-architecture-and-development-blueprint.md`.
+5. The domain document for the requested feature.
 
-The repository is specification-first. Read in this order:
+# 4. ARCHITECTURE SUMMARY — P0
+Frontend: Next.js + React + TypeScript.
+Backend: Next.js server-side application/services + Supabase.
+Database: Supabase PostgreSQL.
+Auth: Supabase Auth with Google/email identity.
+Crypto deposits: NOWPayments adapter.
+Mobile money deposits: CamPay adapter, MTN Cameroon and Orange Cameroon.
+Internal accounting: USD-only immutable ledger.
+Payouts: external private payout application; BG Arena exports instructions and reconciles outcomes.
 
-1. `CLAUDE.md`
-2. `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md`
-3. `docs/01-master-platform-specification.md`
-4. `docs/24-technical-architecture-and-development-blueprint.md`
-5. Domain-specific documents relevant to the task.
+# 5. ENGINEERING PRINCIPLE — P0
+Architecture first. Scope second. Implementation third. Testing fourth. Git checkpoint fifth.
 
-# 3. CORE MODEL — P0
-
-- Supabase PostgreSQL is the primary database.
-- Supabase Auth provides Google/email identity.
-- Phone authentication is not used.
-- Internal wallet currency is USD only.
-- Crypto deposits use NOWPayments.
-- Cameroon Mobile Money deposits use CamPay with MTN Cameroon and Orange Cameroon.
-- Payout execution is external and manually controlled through the private payout application.
-- The immutable financial ledger is the accounting source of truth.
-- Game-specific result logic is outside the BG Arena core.
-
-# 4. DEVELOPMENT ORDER — P1
-
-Foundation → database/RLS → authentication/profiles → wallet/ledger → payment adapters → exchange rates → deposits → competitions/registrations → dashboards → settlements → withdrawals/payout export → reconciliation → administration/support → hardening/deployment.
-
-# 5. AI DEVELOPMENT RULE — P0
-
-Do not ask an AI coding agent to “build the app” while ignoring the repository specifications. The intended workflow is to give the repository to the coding agent, instruct it to read `CLAUDE.md` and the documentation in the required order, then implement the application incrementally while preserving the documented architecture.
+# 6. DOCUMENT MAP — P1
+`00` AI operating manual; `01` master platform; `02` product requirements; `03` system architecture; `04` database; `05` auth/users; `06` player dashboard; `07` admin; `08` competitions; `09` registration; `10` wallet/ledger; `11` payments/deposits; `12` exchange rates; `13` withdrawals; `14` settlement; `15` notifications; `16` support/disputes; `17` security/RLS; `18` API contracts; `19` design system; `20` testing; `21` deployment; `22` reconciliation/audit; `23` AI/file ownership; `24` technical blueprint.

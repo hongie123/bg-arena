@@ -1,69 +1,41 @@
-# BG ARENA — PRODUCT REQUIREMENTS
+# BG ARENA — PRODUCT REQUIREMENTS SPECIFICATION
 
-# 1. USERS AND ROLES — P1
+# 1. PRODUCT PURPOSE — P0
+BG Arena provides a simple competitive gaming experience: account creation, competition discovery, competition registration, participation information, financial wallet management, results/history, notifications and support.
 
-## Player
+# 2. PRIMARY ACTORS — P0
+## 2.1 Player
+Can authenticate, complete profile information, browse eligible competitions, register, fund wallet, view ledger-backed history, receive winnings and request withdrawal.
+## 2.2 Admin
+Can manage users, competitions, registrations, payment records, settlements, withdrawals, reconciliation, notifications, support and system controls according to assigned permissions.
+## 2.3 External provider
+NOWPayments or CamPay supplies external payment events. It never becomes the internal financial source of truth.
+## 2.4 Private payout operator
+Executes payouts outside BG Arena and returns outcomes through the controlled reconciliation process.
 
-A player can create an account, authenticate by email, maintain a profile, browse competitions, register, pay entry fees, participate, view results, receive winnings, deposit funds, request withdrawals, receive notifications, use tutorials and contact support.
+# 3. CORE PLAYER REQUIREMENTS — P1
+The player must always know account state, wallet balance, competition status, registration status and important notifications. Financial values shown as wallet/accounting values are USD.
 
-## Admin
+# 4. ACCOUNT REQUIREMENTS — P0
+Authentication uses Google and/or email identity. Phone number may be collected but cannot authenticate. Profile has no mandatory stored image. Default avatar uses capitalized initial plus assigned/deterministic background.
 
-An authorized administrator manages users, competitions, registrations, payments, settlements, withdrawals, reconciliation, notifications and support.
+# 5. COMPETITION REQUIREMENTS — P1
+Competitions define game, format, title, rules, schedule, capacity, entry fee, prize structure, status and dynamic registration requirements. Game-specific identifiers belong to registration, not the permanent profile.
 
-## System/service roles
+# 6. FINANCIAL REQUIREMENTS — P0
+Wallet is USD-only. Deposits can originate in supported crypto or external fiat/mobile-money currencies. Every verified deposit is converted into USD and represented by a financial transaction plus ledger entry. Entry fees and winnings are USD.
 
-Server-side services process authenticated provider events, exchange-rate lookups, settlement operations, notifications and other controlled automation.
+# 7. PAYMENT REQUIREMENTS — P0
+Crypto deposits use NOWPayments. Mobile money uses CamPay with MTN Cameroon and Orange Cameroon. Mobile Money can be visible globally but must clearly state current Cameroon-only network support. A friend's supported Cameroon number may pay a player's deposit; matching is by deposit/provider references and verified transaction information, not by assuming payer phone equals player phone.
 
-# 2. ACCOUNT REQUIREMENTS — P0
+# 8. WITHDRAWAL REQUIREMENTS — P0
+BG Arena validates and reserves funds, creates a withdrawal request and payout instruction. It never stores payout secrets or executes payout APIs.
 
-Required concepts include unique user ID, email, display/name information, optional phone contact data, account status, protected role and timestamps. Phone number must never become an authentication factor without an explicit product change.
+# 9. ADMIN REQUIREMENTS — P1
+All privileged financial actions require authorization and audit logging. Admin interfaces must expose enough traceability to reconstruct payment → conversion → ledger → wallet.
 
-# 3. PLAYER REQUIREMENTS — P1
+# 10. NON-FUNCTIONAL REQUIREMENTS — P0
+Security, financial correctness, idempotency, RLS, auditability and deterministic state transitions outrank visual polish. P1 performance target is responsive normal usage; P2 optimizations must not weaken correctness.
 
-The player must be able to register/sign in/out, recover access by email, manage profile, browse competitions, inspect rules/schedule/fees/capacity/prizes, register with dynamic game-specific fields, pay entry fees, view USD wallet/transactions, deposit, see source-currency conversion information, view results/winnings, request withdrawals, see withdrawal status, receive notifications, use tutorials/support and manage settings.
-
-# 4. COMPETITION REQUIREMENTS — P1
-
-Admins can configure game, title, description, format, rules, registration window, schedule, participant limit, USD entry fee, USD prize structure, status, dynamic registration fields and settlement configuration.
-
-Status transitions must be explicit and validated:
-
-`DRAFT -> PUBLISHED -> REGISTRATION_OPEN -> REGISTRATION_CLOSED -> IN_PROGRESS -> RESULT_PENDING -> SETTLEMENT_PENDING -> SETTLED -> COMPLETED/CANCELLED`
-
-# 5. REGISTRATION REQUIREMENTS — P0
-
-Validate authentication, account status, competition state, time window, capacity, duplicate registration, dynamic fields, eligibility and entry-fee availability. Registration/payment consistency must be atomic.
-
-# 6. WALLET REQUIREMENTS — P0
-
-Display available/reserved USD and immutable transaction history. The client cannot mutate balances.
-
-# 7. PAYMENT REQUIREMENTS — P1
-
-Clearly show payment method, source amount, estimated/confirmed USD equivalent, applicable fees, status and safe provider reference. MTN Mobile Money and Orange Money must be clearly labelled Cameroon-only.
-
-# 8. ADMIN REQUIREMENTS — P1
-
-Provide operational visibility into users, competitions, registrations, deposits, liabilities, pending withdrawals, pending settlements, failed payment events, reconciliation differences and support workload.
-
-# 9. AUDIT REQUIREMENTS — P0
-
-Sensitive actions retain actor, action, target, timestamp, reason where required and safe before/after information plus a correlation/reference ID.
-
-# 10. UX REQUIREMENTS — P1
-
-Every asynchronous feature needs loading, empty, success and error states. Financial actions require confirmation and transparent amounts, fees, conversion information and status.
-
-# 11. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-Do not implement requirements solely as static UI. Every financial/product action must map to a secure server-side domain operation and persistent state.
-
-## P1
-
-Build player and admin flows from the requirements above before adding optional polish.
-
-## P2
-
-Use reusable components, typed validation schemas and explicit state machines for status-driven workflows.
+# 11. ACCEPTANCE PRINCIPLE — P0
+A requirement is accepted only when its happy path, failure states, authorization, persistence and tests are defined. “Looks right” is not acceptance.

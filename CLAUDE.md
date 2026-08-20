@@ -1,89 +1,66 @@
 # BG ARENA — CLAUDE CODEBASE INSTRUCTIONS
 
-# 1. DOCUMENT AUTHORITY — P0
+# 1. AUTHORITY — P0
+This repository is a specification-first engineering project. Markdown documents are implementation contracts. Read the governing documents before changing code. Do not invent product behavior when a documented rule exists.
 
-This repository is an executable engineering contract for BG Arena. Markdown documentation is not a summary. It defines architecture, business rules, security boundaries, data ownership, financial behavior, UI responsibilities, testing obligations, and AI-agent modification limits.
-
-## 1.1 Priority system — P0
-- `#` = authoritative document/domain.
+## 1.1 Priority — P0
+- `#` = document authority/domain.
 - `##` = major implementation area.
 - `###` = required subsystem/rule.
-- `P0` = non-negotiable invariant. Never weaken it for convenience.
-- `P1` = required product behavior.
-- `P2` = preferred engineering behavior.
-- `P3` = future/optional behavior.
+- P0 = invariant; never violate for convenience.
+- P1 = required production behavior.
+- P2 = preferred implementation quality.
+- P3 = future/optional scope.
 
 # 2. REQUIRED READING ORDER — P0
-
-Before changing code, read `CLAUDE.md`, `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md`, `docs/01-master-platform-specification.md`, `docs/24-technical-architecture-and-development-blueprint.md`, then every domain document affected by the task. Inspect migrations, source, tests and configuration before editing.
+1. `CLAUDE.md`.
+2. `docs/00-AI-DEVELOPMENT-MASTER-MANUAL.md`.
+3. `docs/01-master-platform-specification.md`.
+4. `docs/24-technical-architecture-and-development-blueprint.md`.
+5. The domain document matching the task.
+6. Relevant database migrations, source files and tests.
 
 # 3. SOURCE OF TRUTH — P0
+Explicit approved architecture decisions outrank implementation convenience. The master platform specification defines WHAT BG Arena is. The technical blueprint defines HOW it is built. Domain documents define implementation details. Existing code is authoritative only where it does not conflict with those contracts.
 
-Final explicit user decisions outrank implementation convenience. Then this file, the AI manual, the master platform specification, the technical blueprint, specialized specifications, existing migrations/code, and finally engineering judgment. If a conflict affects money, identity, authorization, RLS, settlement, withdrawal or provider security, STOP and document the conflict. Never silently redefine architecture.
+If a conflict affects money, identity, authorization, RLS, payout security, or historical records: STOP, document the conflict, and request an architectural decision. Never silently redefine the system.
 
-# 4. CORE INVARIANTS — P0
+# 4. NON-NEGOTIABLE ARCHITECTURE — P0
+- Game-agnostic core.
+- Supabase PostgreSQL/Auth/RLS.
+- Internal wallet currency USD only.
+- External deposit currencies are normalized into USD after verified payment.
+- Authentication through Google and/or email identity; phone authentication is not used.
+- Phone number is profile/contact/payment context only.
+- NOWPayments is the crypto deposit adapter.
+- CamPay is the mobile-money deposit adapter for MTN Cameroon and Orange Cameroon.
+- Mobile Money may be displayed globally, but its current network capability must be clearly described as Cameroon-only.
+- Payment providers are adapters; the ledger never depends directly on a provider.
+- Immutable/append-only financial history with compensating corrections.
+- BG Arena never executes player payouts.
+- Payout credentials belong only to the private payout application.
+- AI result extraction is untrusted input and never financial authority.
 
-## 4.1 Game-agnostic platform — P0
-Core services MUST NOT contain permanent PUBG/CODM/Free Fire/game-specific profile or scoring assumptions. Game-specific information belongs to competition registration fields and external result/settlement processing.
+# 5. FORBIDDEN — P0
+Never trust client balances, client USD credit values, client exchange rates, client payment status, unauthenticated webhooks, or AI settlement output. Never expose service-role/provider secrets. Never use floating-point arithmetic as authoritative money. Never duplicate-credit a provider event. Never settle a competition twice. Never silently rewrite historical financial facts. Never add permanent PUBG/CODM/Free Fire fields to profiles. Never call payout APIs from BG Arena.
 
-## 4.2 Stack — P0
-Frontend: Next.js + React + TypeScript. Backend: Next.js server-side services + Supabase. Database: Supabase PostgreSQL. Authentication: Supabase Auth with Google and email identity. Version control: Git/GitHub. Development environment: Antigravity + Claude.
+# 6. MONEY RULES — P0
+All internal financial values are USD. Use integer minor units or exact decimal arithmetic. Every completed deposit stores original amount, original currency/asset, USD amount, rate, rate source, rate timestamp, provider, provider transaction reference and processing timestamps. Historical credits do not fluctuate with later rates.
 
-## 4.3 USD-only accounting — P0
-Every authoritative wallet is USD. Incoming BTC, USDT, ETH, XAF, MTN Cameroon or Orange Cameroon payments remain external payment records. A completed deposit becomes a fixed USD ledger credit with the original amount, currency/asset, rate, source, timestamps and provider references preserved.
+# 7. PAYMENT RULES — P0
+NOWPayments handles crypto deposits. CamPay handles MTN Cameroon and Orange Cameroon mobile-money deposits. Provider webhooks are server-side, authenticated and idempotent. A payment that cannot be matched confidently becomes `REVIEW_REQUIRED`. A timeout must not create a second provider payment until the original request is reconciled. Underpayments/overpayments follow explicit policy; no silent discrepancy is allowed.
 
-## 4.4 Payments — P0
-NOWPayments handles crypto deposits. CamPay handles MTN Cameroon and Orange Cameroon Mobile Money. Mobile Money may be visible globally only with an explicit Cameroon-only limitation. Do not claim unsupported networks/countries.
+# 8. FINANCIAL MUTATION RULE — P0
+Every money mutation must have authorization, validation, idempotency/reference key, transaction boundary, ledger effect, audit event and deterministic failure behavior. UI code may request a financial operation but may never directly write ledger entries or balances.
 
-## 4.5 Authentication — P0
-Phone authentication is disabled. Phone numbers are profile/contact/payment information only.
+# 9. RLS — P0
+Players can read only their own protected records. Financial writes are server-side. Admin capabilities are role/permission based and audited. Service-role access is never exposed to browser code.
 
-## 4.6 Payout separation — P0
-BG Arena never executes payout-provider APIs. It validates withdrawals, reserves USD, records state, generates payout instructions and reconciles results. The private payout application owns payout-provider secrets and execution.
+# 10. AI AGENT WORKFLOW — P0
+Before coding: identify governing docs, inspect current implementation, map dependencies, state transitions, authorization and failure cases. Then implement the smallest coherent change, write/update tests, run validation, inspect the diff, update docs if behavior changed, and create a Git checkpoint.
 
-# 5. FINANCIAL RULES — P0
-
-Every money mutation requires server authorization, validation, unique reference/idempotency, transaction boundary, explicit ledger impact, duplicate protection and auditability. Use exact decimal or integer minor-unit arithmetic. The immutable ledger is the financial source of truth. Never trust client balances, client USD amounts, client status, client exchange rates or browser redirects.
-
-# 6. PAYMENT RULES — P0
-
-Validate webhook authenticity, provider transaction/reference, deposit association, expected amount/currency/asset, status, duplicate state and conversion requirements before credit. Webhooks are server-side only. A timeout MUST NOT blindly create a second provider payment. Unmatched, ambiguous, underpaid, overpaid or wrong-currency payments enter controlled review according to the configured policy.
-
-## 6.1 Deposit chain — P0
-Player → deposit intent → provider payment → provider confirmation → verified provider transaction → exchange-rate snapshot → USD financial transaction → immutable ledger credit → wallet → notification.
-
-## 6.2 Historical conversion — P0
-Never recalculate a completed deposit using a later rate. Rate failures produce `CONVERSION_PENDING` or another explicitly defined safe state; never guess.
-
-# 7. SETTLEMENT RULES — P0
-
-AI extraction is untrusted. Validate schema, competition, registrations, participants, duplicates, ranges, eligibility, game-specific rules and financial totals. Require administrator preview and explicit confirmation. Execute the final ledger mutation atomically and prevent duplicate settlement.
-
-# 8. WITHDRAWAL RULES — P0
-
-Validate available balance, create a reservation before payout export, preserve the reservation during ambiguous external outcomes, and reconcile through an authorized workflow. Do not place payout secrets in BG Arena.
-
-# 9. RLS AND AUTHORIZATION — P0
-
-Players can read their own profile, wallet, deposits, transactions, registrations, withdrawals, notifications, support and disputes. They cannot insert ledger entries, complete deposits, execute settlements, access other users' financial records or administer payment methods. Server authorization and PostgreSQL/RLS protections must back the UI.
-
-# 10. AI AGENT WORKFLOW — P1
-
-1. Read governing docs.
-2. Inspect current implementation.
-3. Identify ownership and dependencies.
-4. Define schema/state transitions/security.
-5. Implement server/domain behavior first for financial features.
-6. Implement UI within the design system.
-7. Add unit/integration/security/E2E tests.
-8. Test retries, duplicates, failures and authorization.
-9. Review the diff.
-10. Update documentation when the contract changes.
-
-# 11. FORBIDDEN — P0
-
-Never expose secrets; use floating-point authoritative money; trust browser financial values; bypass RLS; duplicate-credit a provider event; silently modify historical ledger records; hardcode provider assumptions; execute payouts; let AI directly credit wallets; add permanent game-specific profile fields; or invent missing business rules.
+# 11. SCOPE CONTROL — P0
+A request such as “change the deposit button” authorizes only the smallest UI change required. Do not opportunistically modify ledger, payment, exchange-rate, RLS, schema or architecture code unless the task explicitly requires it.
 
 # 12. DEFINITION OF DONE — P0
-
-A feature is complete only when documentation, schema, domain logic, API behavior, UI, validation, authorization/RLS, persistence, idempotency, auditability, error handling and tests agree. A visually complete screen, mocked provider success or client-side balance is not a completed feature.
+A feature is complete only when specification, UI, database schema, business logic, authorization, RLS, validation, persistence, idempotency, auditability, failure states, tests and documentation agree.

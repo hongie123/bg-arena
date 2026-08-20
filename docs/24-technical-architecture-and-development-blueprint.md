@@ -1,81 +1,79 @@
 # BG ARENA — TECHNICAL ARCHITECTURE & DEVELOPMENT BLUEPRINT
 
-# 1. DOCUMENT AUTHORITY — P0
+# 1. DOCUMENT STATUS — P0
+Version: Technical Architecture v2.0+. This is the authoritative implementation blueprint and incorporates the approved architecture for USD-only accounting, NOWPayments crypto deposits, CamPay MTN/Orange Cameroon mobile money, centralized exchange rates, immutable ledger accounting, game-agnostic competitions and external/manual payouts.
 
-Version: Technical Architecture v2.0. Status: Development Blueprint. This document defines HOW BG Arena is built. The Master Platform Specification defines WHAT BG Arena is. Neither may silently contradict the other.
+# 2. STACK — P0
+Frontend: Next.js + React + TypeScript. Backend: Next.js server-side services and Supabase. Database: Supabase PostgreSQL. Authentication: Supabase Auth with Google/email identity. Crypto deposits: NOWPayments. Mobile money: CamPay with MTN Cameroon and Orange Cameroon. Version control: Git/GitHub. AI development: Claude/Antigravity.
 
-# 2. TECHNOLOGY STACK — P0
+# 3. ARCHITECTURAL PRINCIPLES — P0
+Game-agnostic core. USD-only internal wallet. External payment currencies are normalized into USD. Immutable ledger is financial source of truth. Provider records and accounting records are separate. UI is not financial authority. AI extraction is not settlement authority. BG Arena is not the payout executor.
 
-Frontend: Next.js, React, TypeScript. Backend: Next.js server-side services. Database/backend platform: Supabase PostgreSQL. Authentication: Supabase Auth with Google and email identity; phone authentication disabled. Crypto deposits: NOWPayments. Mobile Money: CamPay, MTN Cameroon and Orange Cameroon. Currency normalization: centralized exchange-rate service. Version control: Git/GitHub. AI development: Antigravity + Claude.
+# 4. COMPLETE PAYMENT PIPELINE — P0
+PLAYER → DEPOSIT INTENT → PAYMENT PROVIDER → VERIFIED EXTERNAL EVENT → PROVIDER TRANSACTION → EXCHANGE-RATE SERVICE → USD VALUE → FINANCIAL TRANSACTION → LEDGER ENTRY → USD WALLET → NOTIFICATION → RECONCILIATION.
 
-# 3. CORE ARCHITECTURE — P0
+# 5. PAYMENT METHODS — P0
+Database-driven methods include NOWPAYMENTS_CRYPTO, CAMPAY_MTN_CM and CAMPAY_ORANGE_CM. Crypto availability must come from provider/configuration rather than permanent hardcoded assumptions. Crypto assets and networks are separate concepts. Mobile-money capability is currently Cameroon-specific even if the UI is globally visible.
 
-BG Arena is game-agnostic and USD-denominated. External payments enter through provider adapters, are independently verified, converted into USD, and credited through the immutable financial ledger. Payout execution is outside BG Arena.
+# 6. DEPOSIT DATA — P0
+Minimum deposit data: id, deposit_reference, user_id, payment_method_id, provider, provider_transaction_id, provider_payment_reference, requested_amount, requested_currency, received_amount, received_currency, usd_amount, exchange_rate, exchange_rate_source, exchange_rate_timestamp, exchange_rate_reference, status, payment_metadata, created_at, confirmed_at, failed_at, expires_at and idempotency_key as required.
 
-# 4. PAYMENT ARCHITECTURE — P0
+# 7. DEPOSIT STATE MACHINE — P0
+CREATED → AWAITING_PAYMENT → PAYMENT_DETECTED → PAYMENT_CONFIRMED → CONVERSION_PENDING → CREDIT_PENDING → COMPLETED. Failure/review states: EXPIRED, FAILED, PAYMENT_MISMATCH, CONVERSION_FAILED, CREDIT_FAILED, REVIEW_REQUIRED. Invalid transitions are rejected centrally.
 
-## 4.1 Providers — P0
-NOWPayments handles crypto deposits. CamPay handles MTN Cameroon and Orange Cameroon Mobile Money. Provider capabilities must be configuration-driven; do not permanently hardcode a cryptocurrency list or unsupported country/network.
+# 8. NOWPAYMENTS — P0
+Use a server-side adapter with client/service/types/webhook/validation modules. Attach the BG Arena deposit reference to the provider order/reference when supported. Verify provider callback/status, match provider IDs, enforce idempotency and only then proceed to conversion/accounting.
 
-## 4.2 Global Mobile Money presentation — P0
-The Mobile Money option may be displayed internationally, but the UI must explicitly state that direct support is currently limited to MTN Cameroon and Orange Cameroon. It must not imply MTN/Orange global coverage.
+# 9. CAMPAY — P0
+Use a server-side adapter with client/service/types/webhook/validation modules. Current supported networks are MTN Cameroon and Orange Cameroon. Never claim that the gateway supports those networks globally. Provider credential names must follow the actual provider contract rather than invented names.
 
-## 4.3 Payment identity — P0
-The Mobile Money phone number used for a payment may belong to a trusted third party. Deposit ownership comes from the verified BG Arena deposit intent and provider reference, not from assuming the payer phone equals the account phone.
+# 10. MOBILE MONEY IDENTITY — P0
+The payer's mobile-money phone number need not equal the player's profile phone number. A trusted person may pay on the player's behalf when the provider flow permits it. The deposit remains linked to the authenticated player's deposit intent. Matching relies on verified provider/deposit references and payment evidence, not payer-phone equality.
 
-# 5. DEPOSIT PIPELINE — P0
+# 11. EXCHANGE RATE — P0
+Central service only. No page calls a rate API directly. Store rate snapshot and source when used. Do not guess when unavailable. Display estimates are not automatically authoritative settlement rates. Historical completed credits never change with future rates.
 
-Player chooses USD target → BG Arena creates deposit intent → provider payment is created → player pays → provider confirms → webhook/status is authenticated → provider transaction is matched → conversion is determined → exchange-rate snapshot is stored → USD financial transaction is created → immutable ledger credit is written atomically → wallet reflects USD → notification/reconciliation data is persisted.
+# 12. WALLET/LEDGER — P0
+Each player has one primary USD wallet. Financial transactions and ledger entries are created atomically. Available balance is centralized. Reservations support withdrawals. Corrections are compensating transactions, not edits/deletes of historical ledger rows.
 
-## 5.1 Deposit states — P0
-Recommended states: `CREATED`, `PENDING`, `AWAITING_PAYMENT`, `PAYMENT_DETECTED`, `PAYMENT_CONFIRMED`, `CONVERSION_PENDING`, `CREDIT_PENDING`, `COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`, `REVIEW_REQUIRED`. State transitions must be centralized and validated.
+# 13. COMPETITIONS — P1
+Competition data includes game/reference, format, title, rules, schedule, registration window, capacity, entry fee USD, prize structure, status and dynamic fields. Permanent profiles remain game-neutral.
 
-## 5.2 Deposit records — P0
-A deposit preserves deposit reference, user, payment method, provider, provider transaction/reference, requested amount/currency, received amount/currency, USD amount, exchange rate, rate source/timestamp/reference, status, metadata and lifecycle timestamps.
+# 14. REGISTRATION — P0
+Registration validates competition state, dynamic fields, capacity, duplicate registration and available USD. Entry fee debit and registration confirmation are atomic. Game-specific IDs belong to registration values.
 
-# 6. CURRENCY ARCHITECTURE — P0
+# 15. SETTLEMENT — P0
+External/AI result input is untrusted. Validate schema, competition, registrations, numeric values, duplicates and settlement configuration. Require admin preview and explicit confirmation. Execute atomic USD credits. Prevent duplicate settlement.
 
-All completed deposits normalize into USD. Fiat uses the exchange-rate service. Crypto should prefer applicable provider-confirmed payment data where it establishes the financial value, while still storing BG Arena's own USD accounting snapshot. Failed rate retrieval must never produce a guessed value.
+# 16. WITHDRAWAL — P0
+Request → validate → reserve USD → create withdrawal → admin review → payout JSON → private payout application → external outcome → controlled reconciliation. BG Arena never executes payout-provider APIs.
 
-## 6.1 Rate abstraction — P0
-Use `ExchangeRateProvider` behind `ExchangeRateService`. Support primary/fallback providers only when explicitly configured and record which source was used. Display estimates and settlement rates are separate concepts.
+# 17. DATABASE — P0
+Core tables: profiles, admin_roles, competitions, competition_custom_fields/options, competition_registrations/values, wallet_accounts, ledger_entries, financial_transactions, financial_reservations, deposits, payment_methods, payment_provider_transactions, payment_events, exchange_rate_snapshots, settlements, settlement_items, withdrawals, withdrawal_events, notifications, support_conversations/messages, disputes, audit_logs, system_controls.
 
-# 7. FINANCIAL ARCHITECTURE — P0
+# 18. SECURITY — P0
+RLS is mandatory. Player writes to financial tables are prohibited except through approved server-side use cases. Secrets remain server-side. Webhooks are authenticated. Dynamic inputs are schema-validated. Admin permissions are explicit and audited.
 
-Core tables: `wallet_accounts`, `ledger_entries`, `financial_transactions`, `financial_reservations`, `deposits`, `payment_methods`, `payment_provider_transactions`, `payment_events`, `exchange_rate_snapshots`. The ledger is append-only and authoritative. Available balance is derived centrally from credits, debits and active reservations.
+# 19. API BOUNDARY — P0
+API routes call domain services. Provider APIs are infrastructure. Client cannot call provider secrets or ledger mutations. Webhook endpoints are independent of browser sessions and use provider authentication.
 
-# 8. COMPETITIONS — P0
+# 20. DIRECTORY CONTRACT — P1
+Use `app/`, `features/`, `shared/`, `infrastructure/`, `financial/`, `database/`, `tests/`, `docs/`. Payment adapters live under infrastructure/payments; exchange rates under infrastructure/exchange-rates; ledger/balance/reservations under financial.
 
-Competitions remain game-agnostic. Use `competitions`, `competition_custom_fields`, `competition_custom_field_options`, `competition_registrations`, and `competition_registration_values`. Entry fees are USD and wallet deductions are atomic.
+# 21. SYSTEM CONTROLS — P0
+Support emergency switches such as deposits_enabled, crypto_deposits_enabled, mobile_money_deposits_enabled, campay_mtn_enabled, campay_orange_enabled and nowpayments_enabled. Changes are permissioned and audited.
 
-# 9. SETTLEMENT — P0
+# 22. FINANCIAL LIMITS/FEES — P1
+Support configurable minimum/maximum deposit, daily/monthly limits and explicit fee policy. The code must not implicitly choose whether a target USD amount means gross payment or net wallet credit; that business policy must be configured/documented.
 
-External result system → settlement JSON → schema/identity/eligibility validation → financial calculation → admin preview → explicit approval → atomic ledger mutation → audit and duplicate protection. AI output is never financial authority.
+# 23. RECONCILIATION — P0
+Every completed deposit must be reconstructable from player → deposit → payment method → provider transaction → source amount → rate snapshot → financial transaction → ledger → wallet. Discrepancies become explicit review states.
 
-# 10. WITHDRAWALS — P0
+# 24. DEVELOPMENT ORDER — P0
+Foundation → database/RLS → authentication → profiles → wallet/ledger → payment abstraction → NOWPayments/CamPay → webhook/idempotency → exchange rates → deposits → competitions/registration → player/admin UI → settlement → withdrawals → reconciliation → notifications/support → security/testing/deployment.
 
-Player request → validation → USD reservation → admin review → payout JSON export → private payout application → manual result return → complete/release/reconcile. BG Arena does not execute payout APIs.
+# 25. PRODUCTION DEFINITION OF DONE — P0
+Provider integration works; secrets protected; payment creation/status works; callbacks verified; duplicate events rejected; source currency preserved; conversion snapshot preserved; USD credit atomic; wallet ledger-backed; notifications/reconciliation work; tests pass; RLS verified; Git diff reviewed; documentation matches implementation.
 
-# 11. DIRECTORY CONTRACT — P1
-
-Application ownership follows the documented feature/infrastructure/financial split. Payment adapters live under `infrastructure/payments/nowpayments` and `infrastructure/payments/campay`; exchange-rate logic lives under `infrastructure/exchange-rates`; ledger logic lives under `financial/ledger`; deposits own user-facing deposit workflows but never directly write the ledger.
-
-# 12. API CONTRACT — P0
-
-Representative routes: `/api/deposits`, `/api/deposits/[id]`, provider create/status routes, `/api/payments/webhooks/nowpayments`, `/api/payments/webhooks/campay`, and `/api/exchange-rates`. Exact route names may evolve, but server-only financial boundaries may not.
-
-# 13. SECURITY — P0
-
-Public browser variables may contain only public Supabase configuration. Service-role, provider API keys, webhook secrets, exchange-rate secrets and email secrets are server-only. RLS protects records and server authorization protects privileged financial operations.
-
-# 14. TESTING — P0
-
-Mandatory payment tests include successful crypto, MTN and Orange deposits; duplicate webhook; duplicate provider transaction; rate outage; rate recovery; underpayment; overpayment; wrong currency; unmatched player; unauthenticated webhook; provider timeout; idempotent payment creation; and reconciliation.
-
-# 15. DEVELOPMENT PHASES — P1
-
-1. Foundation. 2. Authentication. 3. Competitions. 4. Financial foundation. 5. Payment infrastructure. 6. Currency infrastructure. 7. Deposits. 8. Settlements. 9. Withdrawals. 10. Reconciliation. 11. Administration. 12. Hardening.
-
-# 16. FINAL ARCHITECTURAL RULE — P0
-
-No external payment becomes wallet money until BG Arena establishes authenticity, deposit ownership, uniqueness, valid conversion and ledger recording. Once credited, the USD amount is historical and immutable except through explicit compensating financial operations.
+# 26. ARCHITECTURAL CONFLICT PROCEDURE — P0
+If implementation conflicts with this blueprint: stop; identify conflict; explain impact; propose alternatives; obtain explicit approval; update master/technical/domain documents; then implement. No AI agent may silently redefine BG Arena.

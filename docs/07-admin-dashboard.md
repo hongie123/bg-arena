@@ -1,55 +1,31 @@
-# ADMIN DASHBOARD
+# BG ARENA — ADMIN DASHBOARD SPECIFICATION
 
-# 1. OVERVIEW — P1
+# 1. PURPOSE — P0
+The admin application is a privileged operational interface. It must expose controlled management and investigation capabilities without bypassing domain safeguards.
 
-Provide operational summaries for users, competitions, registrations, payments, pending withdrawals, pending settlements and reconciliation.
+# 2. NAVIGATION — P1
+Overview; Users; Competitions; Registrations; Settlements; Payments; Wallet/Transactions; Withdrawals; Financial Reconciliation; Notifications; Support; System Controls where permission allows.
 
-# 2. USERS — P1
+# 3. PERMISSIONS — P0
+Use granular permissions such as users.view, competitions.manage, registrations.view, payments.view/review/reconcile/retry, settlements.review/execute, withdrawals.review/complete, reconciliation.view, notifications.manage, support.manage and system_controls.manage.
 
-Search/filter users, inspect profile/status/history and perform permitted account actions. Sensitive operations require confirmation and audit logging.
+# 4. OVERVIEW — P1
+Show operational KPIs, pending deposits, review-required payments, pending withdrawals, active competitions, recent settlement activity and financial warnings. KPIs must derive from authoritative queries.
 
-# 3. COMPETITIONS — P1
+# 5. PAYMENT OPERATIONS — P0
+Admins can inspect deposit reference, player, provider, method, original amount/currency, provider transaction, conversion rate, USD credit, state and linked ledger transaction. Manual review actions require reason and audit event.
 
-Create/edit/publish/open/close/start/cancel/complete competitions through valid state transitions. Configure fees, prizes, registration fields and settlement rules.
+# 6. COMPETITION MANAGEMENT — P1
+Create/edit/publish/archive competitions, configure registration fields, entry fee, schedule, capacity, prize structure and settlement configuration. Published financial terms should not be silently changed after registrations without explicit policy.
 
-# 4. REGISTRATIONS — P1
-
-View participants, dynamic registration values, payment state and registration status while minimizing sensitive information.
-
-# 5. SETTLEMENTS — P0
-
-Import structured results, validate, preview calculations, inspect participant mappings and explicitly confirm settlement. Confirmation is high-risk financial activity and must be audited.
-
-# 6. PAYMENTS — P0
-
-Inspect deposits, provider references, status, conversion details and failures. Reconciliation must not mutate immutable ledger history.
-
-# 7. WALLET/TRANSACTIONS — P0
-
-Search transactions and source references. Administrative adjustments require reason, authorization and compensating ledger entry.
+# 7. SETTLEMENT — P0
+Import/validate result JSON, preview affected registrations and amounts, require explicit confirmation, execute one atomic settlement, then lock completed settlement against duplicate execution.
 
 # 8. WITHDRAWALS — P0
+Review requests, verify reserved funds/history, export payout instructions, record external outcome and complete/release/reverse according to documented state transitions. Do not execute payout APIs.
 
-Review requests, validate history, reserve/release funds according to state, generate payout instructions and record external outcomes. Never execute payout provider APIs here.
+# 9. AUDIT — P0
+Every privileged financial action records actor, action, target/reference, before/after summary where safe, reason when required, timestamp and correlation ID.
 
-# 9. FINANCIAL RECONCILIATION — P0
-
-Calculate player liabilities and group by payment method/status/date; expose discrepancies and unresolved records.
-
-# 10. NOTIFICATIONS/SUPPORT — P1
-
-Manage authorized announcements and support workflows without exposing secrets.
-
-# 11. ADMIN SAFETY — P0
-
-Never put provider secret keys in the browser. Never rely on hidden frontend routes for authorization. Every privileged action is server-authorized and audited.
-
-# 12. AI IMPLEMENTATION DIRECTIVES
-
-## P0
-
-Admin UI is not a security boundary. Server authorization and audit logs are mandatory.
-
-## P1
-
-Use explicit confirmation dialogs for settlements, adjustments, refunds, withdrawals and other irreversible financial actions.
+# 10. UX — P1
+Dangerous actions require explicit confirmation and explain consequences. Financial amounts must show currency. Long tables need filters, pagination and stable sorting.
