@@ -1,37 +1,39 @@
 # CURRENCY AND EXCHANGE RATES
 
-## Internal rule
+# 1. INTERNAL RULE — P0
 
 USD is the only internal wallet/accounting currency.
 
-## Deposit conversion
+# 2. DEPOSIT CONVERSION — P0
 
-When a deposit becomes eligible for credit:
+At credit time: identify source asset -> obtain configured USD rate -> record rate/source -> calculate exact USD -> apply explicit rounding -> credit wallet -> permanently store conversion snapshot.
 
-1. identify source currency/asset;
-2. obtain the current configured exchange rate to USD;
-3. record the rate and source;
-4. calculate exact USD value;
-5. apply configured rounding once at the defined boundary;
-6. credit the USD wallet;
-7. store the conversion snapshot permanently with the deposit.
+# 3. RATE SOURCE — P1
 
-## Rate source
+The production rate provider is configuration. Never invent a provider URL or rate.
 
-The exact production exchange-rate provider is a configurable integration. Do not hard-code an invented provider URL or rate.
+# 4. CRYPTO PRICING — P1
 
-## Crypto pricing
+Preserve asset/network/rate/timestamp and source used for the credit decision.
 
-Crypto conversion must use the configured provider/rate source appropriate to the deposit processing time. Preserve asset, network, rate and timestamp.
+# 5. RATE FAILURES — P0
 
-## Rate failures
+If the service is unavailable, invalid or outside configured sanity limits, do not automatically credit. Keep the deposit pending and surface an operational error.
 
-If the rate service is unavailable, returns invalid data, or the rate is outside configured sanity limits, do not credit the deposit automatically. Keep it pending and surface an operational error.
+# 6. HISTORICAL AUDIT — P0
 
-## Rate audit
+Historical deposits are never recalculated later because today's rate differs. The rate used at credit time is immutable financial evidence.
 
-A historical transaction must never be recalculated later merely because today's rate differs. The rate used at credit time is part of the financial record.
+# 7. DISPLAY — P1
 
-## Display
+Pre-payment USD values are estimates. Only the completed server-side conversion is authoritative.
 
-The UI can display estimated USD values before payment confirmation, but labels them as estimates until the authoritative payment and conversion process completes.
+# 8. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+Never trust a client-supplied rate. Never silently choose a fallback rate unless an explicit configured fallback policy exists.
+
+## P1
+
+Use exact decimal arithmetic and persist rate snapshots for audit/reconciliation.
