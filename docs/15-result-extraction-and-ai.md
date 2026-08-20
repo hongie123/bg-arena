@@ -1,36 +1,39 @@
 # RESULT EXTRACTION AND AI
 
-## Purpose
+# 1. PURPOSE — P1
 
-AI may assist administrators by extracting structured competition results from spectator recordings, screenshots, documents or other evidence. AI is not trusted to make financial decisions.
+AI may assist administrators by extracting structured competition results from spectator recordings, screenshots, documents or other evidence.
 
-## Pipeline
+# 2. TRUST BOUNDARY — P0
 
-record evidence -> extraction model -> structured JSON -> schema validation -> business validation -> admin preview -> settlement engine.
+AI output is untrusted data. It is never a financial authority and cannot directly call wallet-credit operations.
 
-## Required structured output
+# 3. PIPELINE — P0
 
-A result payload should identify:
+`evidence -> extraction model -> structured JSON -> schema validation -> business validation -> admin preview -> settlement engine`
 
-- competition ID/reference;
-- extraction timestamp/source;
-- participants/registration references;
-- normalized metrics;
-- confidence/uncertainty where available;
-- source evidence reference where available.
+# 4. STRUCTURED OUTPUT — P1
 
-## Security
+Payload should identify competition, extraction timestamp/source, participant/registration references, normalized metrics, confidence/uncertainty and evidence reference where available.
 
-Treat model output as untrusted. Validate every field and reject malformed/ambiguous output. Never execute arbitrary code from model output.
+# 5. VALIDATION — P0
 
-## Human review
+Validate JSON syntax, schema, competition identity, participant mapping, required fields, numeric ranges, duplicates and settlement compatibility. Reject malformed/ambiguous output.
 
-The administrator must be able to inspect extracted results before settlement. Any uncertain mapping must require explicit correction or confirmation.
+# 6. HUMAN REVIEW — P0
 
-## Game-specific extraction
+Administrators inspect extracted results before settlement. Uncertain mappings require explicit correction or confirmation.
 
-Extraction schemas may differ by game. The generic settlement pipeline should consume normalized results after game-specific validation.
+# 7. GAME-SPECIFIC EXTRACTION — P1
 
-## Financial boundary
+Extraction schemas may differ by game. Normalize validated outputs before feeding the generic settlement engine.
 
-AI cannot directly call wallet credit operations. Only the authorized settlement service can produce ledger transactions after validation and explicit confirmation.
+# 8. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+Never execute arbitrary code, SQL, financial mutations or privileged actions from model output.
+
+## P1
+
+Persist extraction input/output and validation status so administrators can audit and reproduce decisions.
