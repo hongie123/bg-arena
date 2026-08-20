@@ -1,49 +1,55 @@
 # ADMIN DASHBOARD
 
-## Overview
+# 1. OVERVIEW — P1
 
 Provide operational summaries for users, competitions, registrations, payments, pending withdrawals, pending settlements and reconciliation.
 
-## Users
+# 2. USERS — P1
 
 Search/filter users, inspect profile/status/history and perform permitted account actions. Sensitive operations require confirmation and audit logging.
 
-## Competitions
+# 3. COMPETITIONS — P1
 
-Create, edit, publish, open/close registration, start, cancel and complete competitions according to valid state transitions. Configure entry fees, prize structures, registration fields and settlement rules.
+Create/edit/publish/open/close/start/cancel/complete competitions through valid state transitions. Configure fees, prizes, registration fields and settlement rules.
 
-## Registrations
+# 4. REGISTRATIONS — P1
 
-View participants, registration field values, payment state and registration status. Do not expose secrets or unnecessary private information.
+View participants, dynamic registration values, payment state and registration status while minimizing sensitive information.
 
-## Settlements
+# 5. SETTLEMENTS — P0
 
-Import structured results, validate them, preview calculations, inspect participant mappings and explicitly confirm settlement. A settlement confirmation is a high-risk financial action and must be audited.
+Import structured results, validate, preview calculations, inspect participant mappings and explicitly confirm settlement. Confirmation is high-risk financial activity and must be audited.
 
-## Payments
+# 6. PAYMENTS — P0
 
-View deposits/payment events, provider references, status, conversion details and failures. Admins may reconcile/resolve according to authorized workflows but must not arbitrarily alter immutable ledger history.
+Inspect deposits, provider references, status, conversion details and failures. Reconciliation must not mutate immutable ledger history.
 
-## Wallet/Transactions
+# 7. WALLET/TRANSACTIONS — P0
 
-Search transactions by player/reference/type/date and inspect the underlying source record. Administrative adjustments require a reason and compensating ledger entry.
+Search transactions and source references. Administrative adjustments require reason, authorization and compensating ledger entry.
 
-## Withdrawals
+# 8. WITHDRAWALS — P0
 
-Review pending requests, validate eligibility/history, reserve/release funds according to state, generate payout instructions and record external payout references/outcomes.
+Review requests, validate history, reserve/release funds according to state, generate payout instructions and record external outcomes. Never execute payout provider APIs here.
 
-## Financial Reconciliation
+# 9. FINANCIAL RECONCILIATION — P0
 
-Calculate player liabilities and group them by payment method/status/date. Show discrepancies and unresolved records.
+Calculate player liabilities and group by payment method/status/date; expose discrepancies and unresolved records.
 
-## Notifications
+# 10. NOTIFICATIONS/SUPPORT — P1
 
-Create and manage authorized platform announcements and user notifications.
+Manage authorized announcements and support workflows without exposing secrets.
 
-## Support
+# 11. ADMIN SAFETY — P0
 
-Assign/respond/close tickets and retain message history.
+Never put provider secret keys in the browser. Never rely on hidden frontend routes for authorization. Every privileged action is server-authorized and audited.
 
-## Admin safety
+# 12. AI IMPLEMENTATION DIRECTIVES
 
-Never place provider secret keys in the dashboard. Never rely on hidden frontend routes for authorization. Every privileged action is server-authorized and audited.
+## P0
+
+Admin UI is not a security boundary. Server authorization and audit logs are mandatory.
+
+## P1
+
+Use explicit confirmation dialogs for settlements, adjustments, refunds, withdrawals and other irreversible financial actions.
