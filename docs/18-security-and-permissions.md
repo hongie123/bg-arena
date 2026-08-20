@@ -1,41 +1,47 @@
 # SECURITY AND PERMISSIONS
 
-## Principles
+# 1. SECURITY PRINCIPLE — P0
 
-Assume the client is hostile. Validate authorization and all financial/business rules server-side.
+Assume the client is hostile. Validate authorization and business/financial rules server-side.
 
-## Supabase security
+# 2. SUPABASE SECURITY — P0
 
-Enable Row Level Security for user-facing tables. Policies should follow least privilege. Service-role credentials remain server-side only.
+Enable RLS for user-facing tables. Follow least privilege. Service-role credentials remain server-side.
 
-## Role protection
+# 3. ROLE PROTECTION — P0
 
-Role fields cannot be updated by players. Admin routes must perform server-side role checks.
+Players cannot update role fields. Admin routes perform server-side role checks.
 
-## Financial security
+# 4. FINANCIAL SECURITY — P0
 
-No client-supplied balance, exchange rate, payout completion status or settlement result can be trusted as authoritative.
+Never trust client-supplied balance, exchange rate, payout completion status or settlement result.
 
-## Webhooks
+# 5. WEBHOOKS — P0
 
-Verify provider signatures/authentication where supported, reject malformed payloads, record provider event IDs and enforce idempotency.
+Verify signatures/authentication where supported, reject malformed payloads, record provider event IDs and enforce idempotency.
 
-## Secrets
+# 6. SECRETS — P0
 
-Secrets belong in deployment environment secret storage. Never commit `.env`, API keys, private keys, webhook signing secrets, payout credentials or database service-role keys.
+Secrets belong in deployment secret storage. Never commit `.env`, API keys, private keys, webhook secrets, payout credentials or service-role keys.
 
-## Audit
+# 7. AUDIT — P0
 
-Record privileged financial/administrative actions with actor, action, target, timestamp, reason and relevant before/after snapshots where safe.
+Record privileged actions with actor, action, target, timestamp, reason and safe before/after snapshots.
 
-## Rate limiting
+# 8. RATE LIMITING — P1
 
-Apply appropriate rate limits to authentication-sensitive endpoints, deposit creation, withdrawal creation, support abuse vectors and other high-risk endpoints.
+Apply limits to authentication-sensitive endpoints, deposits, withdrawals, support abuse vectors and other high-risk operations.
 
-## Input validation
+# 9. INPUT VALIDATION — P0
 
-Validate strings, identifiers, numeric values, JSON payloads, file uploads, URLs and dynamic registration fields. Do not render untrusted HTML without sanitization.
+Validate identifiers, strings, numbers, JSON, uploads, URLs and dynamic fields. Sanitize untrusted HTML.
 
-## Data minimization
+# 10. DATA MINIMIZATION — P1
 
-Store only necessary personal/payment data and restrict visibility according to role and ownership.
+Store only necessary personal/payment data and restrict visibility by role/ownership.
+
+# 11. AI IMPLEMENTATION DIRECTIVES
+
+## P0
+
+No frontend-only security controls are sufficient. Test authorization with hostile clients.
